@@ -1,0 +1,17 @@
+{
+  "appId": "com.lesconstructionssapete.stempy-erp-desktop",
+  "productName": "Stempy-ERP Desktop",
+  "files": ["dist-electron", "dist-react"],
+  "icon": "./desktopIcon.png",
+  "mac": {
+    "target": "dmg",
+    "category": "public.app-category.productivity"
+  },
+  "win": {
+    "target": ["portable", "msi"]
+  },
+  "linux": {
+    "target": "AppImage",
+    "category": "Utility"
+  }
+}
