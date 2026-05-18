@@ -1,1 +1,1 @@
-# stempy-erp-desktop
+# stempy-erp-desktop.
