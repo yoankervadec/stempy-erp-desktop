@@ -2,10 +2,26 @@ import { app, BrowserWindow } from "electron";
 import path from "path";
 import { isDev } from "./util.js";
 
-type test = string;
+app.whenReady().then(() => {
+  createWindow();
 
-app.on("ready", () => {
-  const mainWindow = new BrowserWindow({});
+  app.on("activate", () => {
+    if (BrowserWindow.getAllWindows().length === 0) {
+      createWindow();
+    }
+  });
+});
+
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
+  }
+});
+
+const createWindow = () => {
+  const mainWindow = new BrowserWindow({
+    center: true,
+  });
 
   if (isDev()) {
     mainWindow.loadURL("http://localhost:5123");
@@ -14,4 +30,4 @@ app.on("ready", () => {
       path.join(app.getAppPath(), "dist-react", "index.html"),
     );
   }
-});
+};
