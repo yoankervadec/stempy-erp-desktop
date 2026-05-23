@@ -1,8 +1,7 @@
-import { app, BrowserWindow, ipcMain } from "electron";
-import path from "path";
+import { app, BrowserWindow } from "electron";
 import { ipcMainHandle, isDev } from "./util.js";
-import { getPreloadPath, getUIPath } from "./pathResolver.js";
-import { getStationInfo } from "./stationInfo.js";
+import { Station } from "./Station.js";
+import { PathResolver } from "./PathResolver.js";
 
 app.whenReady().then(() => {
   createWindow();
@@ -25,16 +24,18 @@ const createWindow = () => {
     center: true,
 
     webPreferences: {
-      preload: getPreloadPath(),
+      preload: PathResolver.getPreloadPath(),
+      contextIsolation: true,
+      nodeIntegration: false,
     },
   });
 
   if (isDev()) {
     mainWindow.loadURL("http://localhost:5123");
   } else {
-    mainWindow.loadFile(getUIPath());
+    mainWindow.loadFile(PathResolver.getUIPath());
   }
 
   // await window.electron.getStationInfo() in the renderer process to get the station info
-  ipcMainHandle("getStationInfo", () => getStationInfo());
+  ipcMainHandle("getStationInfo", () => Station.current());
 };
