@@ -1,20 +1,21 @@
 function App() {
   return (
     <>
-      <div style={{ height: "100vh", overflow: "hidden" }}>
+      <div
+        style={{
+          height: "100vh",
+          overflow: "hidden",
+        }}
+      >
         <header
           className="app-header"
-          style={{ border: "1px solid green", height: "30px", width: "100%" }}
-        >
-          {/* <button onClick={() => window.electron.minimize()}>_</button>
-          <button onClick={() => window.electron.maximize()}>[]</button>
-          <button onClick={() => window.electron.close()}>X</button> */}
-        </header>
+          style={{ border: "1px solid green", height: "35px", width: "100%" }}
+        ></header>
         <div
           style={{
             display: "flex",
             width: "100%",
-            height: "calc(100% - 30px)",
+            height: "calc(100% - 35px)",
           }}
         >
           <main style={{ width: "100%", border: "1px solid blue" }}></main>

@@ -14,16 +14,16 @@ type StationInfo = {
 
 type EventPayloadMapping = {
   getStationInfo: StationInfo;
-  // minimize: void;
-  // maximize: void;
-  // close: void;
+  minimize: void;
+  maximize: void;
+  close: void;
 };
 
 interface Window {
   electron: {
     getStationInfo: () => Promise<StationInfo>;
-    // minimize: () => void;
-    // maximize: () => void;
-    // close: () => void;
+    minimize: () => void;
+    maximize: () => void;
+    close: () => void;
   };
 }

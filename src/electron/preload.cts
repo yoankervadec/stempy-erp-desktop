@@ -1,14 +1,21 @@
-const { electron, ipcRenderer } = require("electron");
+const electron = require("electron");
 
 electron.contextBridge.exposeInMainWorld("electron", {
   getStationInfo: () => ipcInvoke("getStationInfo"),
-  // minimize: () => ipcRenderer.send("minimize"),
-  // maximize: () => ipcRenderer.send("maximize"),
-  // close: () => ipcRenderer.send("close"),
+  minimize: () => ipcSend("minimize", undefined),
+  maximize: () => ipcSend("maximize", undefined),
+  close: () => ipcSend("close", undefined),
 } satisfies Window["electron"]);
 
 function ipcInvoke<Key extends keyof EventPayloadMapping>(
   key: Key,
 ): Promise<EventPayloadMapping[Key]> {
   return electron.ipcRenderer.invoke(key);
+}
+
+function ipcSend<Key extends keyof EventPayloadMapping>(
+  key: Key,
+  payload: EventPayloadMapping[Key],
+): void {
+  electron.ipcRenderer.send(key, payload);
 }

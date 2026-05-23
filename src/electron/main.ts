@@ -1,11 +1,11 @@
 import { app, BrowserWindow } from "electron";
 import { ipcMainHandle, isDev } from "./util.js";
 import { Station } from "./Station.js";
-import { WindowIPC } from "./WindowIPC.js";
 import { PathResolver } from "./PathResolver.js";
+import { WindowIPC } from "./WindowIPC.js";
 
 app.whenReady().then(() => {
-  // WindowIPC.register();
+  WindowIPC.register();
 
   createWindow();
 
@@ -26,10 +26,10 @@ const createWindow = () => {
   const mainWindow = new BrowserWindow({
     center: true,
 
-    // frame: false,
-    // titleBarStyle: "hidden",
-    // transparent: true,
+    frame: false,
+    titleBarStyle: "hiddenInset",
 
+    // transparent: true,
     // vibrancy: "sidebar",
     // visualEffectState: "active",
     // backgroundMaterial: "acrylic",
@@ -38,8 +38,6 @@ const createWindow = () => {
       preload: PathResolver.getPreloadPath(),
     },
   });
-
-  mainWindow.maximize();
 
   if (isDev()) {
     mainWindow.loadURL("http://localhost:5123");
