@@ -7,6 +7,9 @@ type StationInfo = {
   release: string;
   arch: string;
   homeDir: string;
+  macAddress: string;
+  timezone: string;
+  locale: string;
 };
 
 type EventPayloadMapping = {
