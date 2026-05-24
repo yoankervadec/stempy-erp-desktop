@@ -6,6 +6,7 @@
 
 *:not(dialog) {
   margin: 0;
+  padding: 0;
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -44,4 +45,14 @@ p {
 #root,
 #__next {
   isolation: isolate;
+}
+
+input {
+  border: none;
+  outline: none;
+}
+
+ul,
+ol {
+  list-style: none;
 }

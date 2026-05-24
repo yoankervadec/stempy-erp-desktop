@@ -1,0 +1,42 @@
+.appHeader {
+  -webkit-app-region: drag;
+
+  display: flex;
+
+  background: var(--sidebar);
+
+  box-shadow: 0 6px 6px -6px hsla(0, 0%, 63%, 0.468);
+
+  z-index: 1;
+}
+
+.searchContainer {
+  -webkit-app-region: no-drag;
+
+  margin-inline: auto;
+  margin-block: auto;
+
+  /* background: hsl(60, 12%, 68%, 0.5); */
+}
+
+.searchInput {
+  width: 50ch;
+  background: var(--lighter);
+  outline: 1px solid var(--darker);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.searchInput:hover {
+  background: var(--darker);
+  outline: 1px solid var(--even-darker);
+  transition:
+    background 0.1s ease,
+    outline 0.1s ease;
+}
+
+.searchInput:focus {
+  background: var(--background);
+  outline: 1px solid var(--green);
+}

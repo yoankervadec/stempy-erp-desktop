@@ -1,0 +1,33 @@
+.sidebar {
+  background: var(--sidebar);
+  margin-right: 0;
+  width: 200px;
+
+  margin-top: 0.5rem;
+}
+
+.sidebarList {
+  /* outline: 1px solid red; */
+  width: calc(100% - 1rem);
+  height: calc(100% - 2rem);
+  margin-inline-start: 0.5rem;
+  margin-block: 0.5rem;
+
+  li {
+    margin-block: 0.2rem;
+    padding: 0.2rem;
+    text-wrap: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    user-select: none;
+  }
+
+  li[data-selected="true"] {
+    opacity: 0.3;
+  }
+
+  li:hover:not([data-selected="true"]) {
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}

@@ -1,3 +1,6 @@
+import ApplicationHeader from "./component/ApplicationHeader";
+import { ApplicationSidebar } from "./component/ApplicationSidebar";
+
 function App() {
   return (
     <>
@@ -7,10 +10,7 @@ function App() {
           overflow: "hidden",
         }}
       >
-        <header
-          className="app-header"
-          style={{ border: "1px solid green", height: "35px", width: "100%" }}
-        ></header>
+        <ApplicationHeader />
         <div
           style={{
             display: "flex",
@@ -18,14 +18,13 @@ function App() {
             height: "calc(100% - 35px)",
           }}
         >
-          <main style={{ width: "100%", border: "1px solid blue" }}></main>
-          <nav
+          <main
             style={{
-              marginRight: "0",
-              border: "1px solid red",
-              width: "200px",
+              width: "100%",
+              height: "100%",
             }}
-          ></nav>
+          ></main>
+          <ApplicationSidebar />
         </div>
       </div>
     </>
