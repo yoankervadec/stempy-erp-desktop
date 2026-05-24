@@ -1,7 +1,20 @@
+import { useEffect, useState } from "react";
+
 import ApplicationHeader from "./component/ApplicationHeader";
 import { ApplicationSidebar } from "./component/ApplicationSidebar";
 
 function App() {
+  const [stationInfo, setStationInfo] = useState<StationInfo | null>(null);
+
+  useEffect(() => {
+    async function load() {
+      const info = await window.electron.getStationInfo();
+      setStationInfo(info);
+      console.log(info);
+    }
+    load();
+  }, []);
+
   return (
     <>
       <div
@@ -23,7 +36,9 @@ function App() {
               width: "100%",
               height: "100%",
             }}
-          ></main>
+          >
+            {stationInfo && <pre>{JSON.stringify(stationInfo, null, 2)}</pre>}
+          </main>
           <ApplicationSidebar />
         </div>
       </div>

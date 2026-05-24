@@ -1,13 +1,9 @@
 .appHeader {
   -webkit-app-region: drag;
-
   display: flex;
-
   background: var(--sidebar);
-
-  box-shadow: 0 6px 6px -6px hsla(0, 0%, 63%, 0.468);
-
   z-index: 1;
+  box-shadow: 0 6px 6px -6px hsla(0, 0%, 63%, 0.468);
 }
 
 .searchContainer {
@@ -39,4 +35,5 @@
 .searchInput:focus {
   background: var(--background);
   outline: 1px solid var(--green);
+  cursor: text;
 }

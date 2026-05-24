@@ -9,6 +9,9 @@ app.whenReady().then(() => {
 
   createWindow();
 
+  // await window.electron.getStationInfo() in the renderer process to get the station info
+  ipcMainHandle("getStationInfo", () => Station.current());
+
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
       createWindow();
@@ -44,7 +47,4 @@ const createWindow = () => {
   } else {
     mainWindow.loadFile(PathResolver.getUIPath());
   }
-
-  // await window.electron.getStationInfo() in the renderer process to get the station info
-  ipcMainHandle("getStationInfo", () => Station.current());
 };

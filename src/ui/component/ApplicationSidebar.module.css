@@ -1,22 +1,24 @@
 .sidebar {
-  background: var(--sidebar);
-  margin-right: 0;
   width: 200px;
+  /* border-radius: 12px 0 0 12px; */
+  overflow: hidden;
+  box-shadow: -4px 0 6px -6px var(--even-darker);
+}
 
-  margin-top: 0.5rem;
+.sidebarContainer {
+  height: calc(100% - 0.25rem);
+  padding-block-start: 0.25rem;
 }
 
 .sidebarList {
-  /* outline: 1px solid red; */
   width: calc(100% - 1rem);
-  height: calc(100% - 2rem);
   margin-inline-start: 0.5rem;
-  margin-block: 0.5rem;
+  height: 100%;
 
   li {
     margin-block: 0.2rem;
     padding: 0.2rem;
-    text-wrap: nowrap;
+    white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
     user-select: none;
