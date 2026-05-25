@@ -1,20 +1,30 @@
+// src/electron/main.ts
+
 import { app, BrowserWindow } from "electron";
-import { ipcMainHandle, isDev } from "./util.js";
+import { ipcMainHandle } from "./util.js";
 import { Station } from "./Station.js";
-import { PathResolver } from "./PathResolver.js";
 import { WindowIPC } from "./WindowIPC.js";
+import { WindowManager } from "./WindowManager.js";
+import { ShortcutManager } from "./ShorcutManager.js";
 
 app.whenReady().then(() => {
+  app.setName("Stempy ERP Desktop");
+
+  // Register IPC handlers before creating any windows to ensure they are available when the renderer process starts
   WindowIPC.register();
 
-  createWindow();
+  // Create the main application window
+  WindowManager.newWindow({});
 
-  // await window.electron.getStationInfo() in the renderer process to get the station info
+  // Initialize the application menu with shortcuts
+  ShortcutManager.init();
+
+  // Handle IPC calls to get station information
   ipcMainHandle("getStationInfo", () => Station.current());
 
   app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow();
+      WindowManager.newWindow({});
     }
   });
 });
@@ -24,27 +34,3 @@ app.on("window-all-closed", () => {
     app.quit();
   }
 });
-
-const createWindow = () => {
-  const mainWindow = new BrowserWindow({
-    center: true,
-
-    frame: false,
-    titleBarStyle: "hiddenInset",
-
-    // transparent: true,
-    // vibrancy: "sidebar",
-    // visualEffectState: "active",
-    // backgroundMaterial: "acrylic",
-
-    webPreferences: {
-      preload: PathResolver.getPreloadPath(),
-    },
-  });
-
-  if (isDev()) {
-    mainWindow.loadURL("http://localhost:5123");
-  } else {
-    mainWindow.loadFile(PathResolver.getUIPath());
-  }
-};
