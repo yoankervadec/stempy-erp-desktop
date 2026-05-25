@@ -1,3 +1,5 @@
+// types.d.ts
+
 // Types shared between the main and renderer processes of the Electron application
 
 type StationInfo = {
@@ -17,6 +19,8 @@ type EventPayloadMapping = {
   minimize: void;
   maximize: void;
   close: void;
+  "search.open": void;
+  "filter.toggle": void;
 };
 
 interface Window {
@@ -25,5 +29,6 @@ interface Window {
     minimize: () => void;
     maximize: () => void;
     close: () => void;
+    onCommand: (cb: (event: any) => void) => void;
   };
 }

@@ -1,0 +1,5 @@
+export const Commands = {
+  OPEN_SEARCH: "OPEN_SEARCH",
+  TOGGLE_FILTER: "TOGGLE_FILTER",
+  OPEN_PREFERENCES: "OPEN_PREFERENCES",
+} as const;

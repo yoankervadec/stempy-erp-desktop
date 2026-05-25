@@ -3,6 +3,7 @@
 import { app, BrowserWindow, Menu } from "electron";
 import { WindowManager } from "./WindowManager.js";
 import { Commands } from "./commands.js";
+import { CommandBus } from "./CommandBus.js";
 
 export class ShortcutManager {
   private static template: Electron.MenuItemConstructorOptions[] = [
@@ -52,18 +53,14 @@ export class ShortcutManager {
           label: "Search",
           accelerator: "F3",
           click() {
-            BrowserWindow.getFocusedWindow()?.webContents.send(
-              Commands.OPEN_SEARCH,
-            );
+            CommandBus.emit("search.open");
           },
         },
         {
           label: "Toggle Filter Panel",
           accelerator: "Shift+F3",
           click() {
-            BrowserWindow.getFocusedWindow()?.webContents.send(
-              Commands.TOGGLE_FILTER,
-            );
+            CommandBus.emit("filter.toggle");
           },
         },
         { type: "separator" },

@@ -1,3 +1,5 @@
+// src/electron/WindowIPC.ts
+
 import { ipcMain, BrowserWindow } from "electron";
 
 export class WindowIPC {
