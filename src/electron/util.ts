@@ -1,10 +1,7 @@
 import { ipcMain, WebFrameMain } from "electron";
 import { pathToFileURL } from "url";
-import { PathResolver } from "./PathResolver.js";
-
-export function isDev(): boolean {
-  return process.env.NODE_ENV === "development";
-}
+import { PathManager } from "./PathManager.js";
+import { Env } from "./Env.js";
 
 export function ipcMainHandle<Key extends keyof EventPayloadMapping>(
   key: Key,
@@ -20,10 +17,13 @@ export function validateEventFrame(frame: WebFrameMain | null) {
   if (!frame) {
     throw new Error("Blocked IPC call from untrusted source: frame is null");
   }
-  if (isDev() && new URL(frame.url).toString() === "http://localhost:5123/") {
+  if (
+    Env.isDev() &&
+    new URL(frame.url).toString() === "http://localhost:5123/"
+  ) {
     return;
   }
-  if (frame.url !== pathToFileURL(PathResolver.getUIPath()).toString()) {
+  if (frame.url !== pathToFileURL(PathManager.getUIPath()).toString()) {
     throw new Error(`Blocked IPC call from untrusted source: ${frame.url}`);
   }
 }

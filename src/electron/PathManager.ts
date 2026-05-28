@@ -1,12 +1,12 @@
 import path from "path";
 import { app } from "electron";
-import { isDev } from "./util.js";
+import { Env } from "./Env.js";
 
-export class PathResolver {
+export class PathManager {
   static getPreloadPath() {
     return path.join(
       app.getAppPath(),
-      isDev() ? "." : "..",
+      Env.isDev() ? "." : "..",
       "/dist-electron/preload.cjs",
     );
   }

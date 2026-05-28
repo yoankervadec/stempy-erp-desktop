@@ -1,6 +1,6 @@
 import { BrowserWindow, BrowserWindowConstructorOptions } from "electron";
-import { PathResolver } from "./PathResolver.js";
-import { isDev } from "./util.js";
+import { PathManager } from "./PathManager.js";
+import { Env } from "./Env.js";
 
 export class WindowManager {
   static mainWindow: BrowserWindow | null = null;
@@ -14,7 +14,7 @@ export class WindowManager {
     titleBarStyle: "hiddenInset",
 
     webPreferences: {
-      preload: PathResolver.getPreloadPath(),
+      preload: PathManager.getPreloadPath(),
     },
   };
 
@@ -43,10 +43,10 @@ export class WindowManager {
 
     this.windows.set(win.id.toString(), win);
 
-    if (isDev()) {
+    if (Env.isDev()) {
       win.loadURL("http://localhost:5123");
     } else {
-      win.loadFile(PathResolver.getUIPath());
+      win.loadFile(PathManager.getUIPath());
     }
 
     return win;

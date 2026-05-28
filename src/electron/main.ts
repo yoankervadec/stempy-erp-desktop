@@ -5,7 +5,7 @@ import { ipcMainHandle } from "./util.js";
 import { Station } from "./Station.js";
 import { WindowIPC } from "./WindowIPC.js";
 import { WindowManager } from "./WindowManager.js";
-import { ShortcutManager } from "./ShorcutManager.js";
+import { ShortcutManager } from "./ShortcutManager.js";
 
 app.whenReady().then(() => {
   app.setName("Stempy ERP Desktop");

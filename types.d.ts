@@ -19,8 +19,7 @@ type EventPayloadMapping = {
   minimize: void;
   maximize: void;
   close: void;
-  "search.open": void;
-  "filter.toggle": void;
+  onCommand: AppCommand;
 };
 
 interface Window {
@@ -29,6 +28,10 @@ interface Window {
     minimize: () => void;
     maximize: () => void;
     close: () => void;
-    onCommand: (cb: (event: any) => void) => void;
+    onCommand: (cb: (event: AppCommand) => void) => void;
   };
 }
+
+type AppCommand =
+  | { type: "navigation.open"; payload?: never }
+  | { type: "filter.toggle"; payload?: never };

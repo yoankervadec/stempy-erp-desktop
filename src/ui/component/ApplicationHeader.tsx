@@ -3,7 +3,7 @@ import styles from "./ApplicationHeader.module.css";
 
 export default function ApplicationHeader() {
   const inputRef = useRef<HTMLInputElement>(null);
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [, setIsSearchOpen] = useState(false);
 
   const openSearch = useCallback(() => {
     setIsSearchOpen(true);
@@ -22,7 +22,7 @@ export default function ApplicationHeader() {
   useEffect(() => {
     const unsubscribe = window.electron.onCommand(({ type }) => {
       switch (type) {
-        case "search.open":
+        case "navigation.open":
           openSearch();
           break;
 
