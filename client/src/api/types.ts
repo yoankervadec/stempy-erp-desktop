@@ -20,23 +20,23 @@
 // ---------------------------------------------------------------------------
 
 /** The API version this client was written against (GET /meta apiVersion). */
-export const SUPPORTED_API_VERSION = 1;
+export const SUPPORTED_API_VERSION = 1
 
 /** A decimal as the server sends it: "0.2500". Plain notation, never exponent. */
-export type Decimal = string;
+export type Decimal = string
 /** An ISO-8601 UTC instant, whole seconds: "2026-11-22T15:04:05Z". */
-export type Instant = string;
+export type Instant = string
 /** A calendar date: "2027-04-01". */
-export type LocalDate = string;
+export type LocalDate = string
 /** A server-assigned id. */
-export type Id = number;
+export type Id = number
 
-export type Language = 'fr' | 'en';
+export type Language = 'fr' | 'en'
 
 /** A resource's stable name: "product", "glAccount". Never translated. */
-export type ResourceKey = string;
+export type ResourceKey = string
 /** A module's name: "masterdata.items". */
-export type ModuleName = string;
+export type ModuleName = string
 
 // ---------------------------------------------------------------------------
 // Errors (RFC 7807, Content-Type: application/problem+json)
@@ -44,30 +44,30 @@ export type ModuleName = string;
 
 export interface FieldError {
   /** Path of the problem: "name", "lines[2].quantity", "lines[0].id". */
-  field: string;
+  field: string
   /** Stable code: REQUIRED, TOO_LONG, LOCKED, READ_ONLY, UNKNOWN_LINE... */
-  code: string;
+  code: string
   /** Translated, for display only. */
-  message: string;
+  message: string
   /** Values the message names, as data ({ max: 50 }). Left out when empty. */
-  params?: Record<string, unknown>;
+  params?: Record<string, unknown>
 }
 
 export interface Problem {
   /** "urn:stempy:problem:<code in lower case>" */
-  type: string;
-  title: string;
-  status: number;
-  detail?: string;
-  instance?: string;
+  type: string
+  title: string
+  status: number
+  detail?: string
+  instance?: string
   /** The stable thing to test against. */
-  code: ErrorCode | (string & {});
+  code: ErrorCode | (string & {})
   /** Show it in error dialogs: it finds the request in the server log. */
-  requestId?: string;
+  requestId?: string
   /** Only on validation failures: every field problem, at most one per field. */
-  errors?: FieldError[];
+  errors?: FieldError[]
   /** On 409 VERSION_CONFLICT: the record (or whole document) as it is now. */
-  current?: Row;
+  current?: Row
 }
 
 /** The codes the generic screens react to. Modules add their own. */
@@ -90,52 +90,52 @@ export type ErrorCode =
   | 'INVALID_REFERENCE'
   | 'NOT_SEARCHABLE'
   | 'LOGIN_RATE_LIMITED'
-  | 'DATABASE_BUSY';
+  | 'DATABASE_BUSY'
 
 // ---------------------------------------------------------------------------
 // Auth (API_GUIDE section 4)
 // ---------------------------------------------------------------------------
 
 export interface LoginRequest {
-  userNo: string;
-  password: string;
+  userNo: string
+  password: string
 }
 
 export interface CompanySummary {
-  id: Id;
-  code: string;
-  description: string | null;
+  id: Id
+  code: string
+  description: string | null
 }
 
 export interface LoginResponse {
   /** Shown only here. Send as "Authorization: Bearer <token>". */
-  token: string;
-  expiresAt: Instant;
-  idleTimeoutSeconds: number;
+  token: string
+  expiresAt: Instant
+  idleTimeoutSeconds: number
   user: {
-    id: Id;
-    userNo: string;
-    name: string;
+    id: Id
+    userNo: string
+    name: string
     /** The user's own choice; null means "each company's default". */
-    language: Language | null;
-  };
-  companies: CompanySummary[];
+    language: Language | null
+  }
+  companies: CompanySummary[]
   /** Null when the user has several companies and no default: send X-Company-Id. */
-  defaultCompanyId: Id | null;
+  defaultCompanyId: Id | null
   /** The effective language for the default company. */
-  language: Language;
+  language: Language
 }
 
 export interface MeResponse {
-  user: { id: Id; userNo: string; name: string };
-  company: CompanySummary;
-  permissions: string[];
-  language: Language;
+  user: { id: Id; userNo: string; name: string }
+  company: CompanySummary
+  permissions: string[]
+  language: Language
 }
 
 /** PATCH /auth/me. null goes back to each company's default. */
 export interface MePatch {
-  language: Language | null;
+  language: Language | null
 }
 
 // ---------------------------------------------------------------------------
@@ -143,20 +143,20 @@ export interface MePatch {
 // ---------------------------------------------------------------------------
 
 export interface Meta {
-  apiVersion: number;
-  language: Language;
-  menu: MenuGroup[];
-  resources: MetaResource[];
-  reports: MetaReport[];
+  apiVersion: number
+  language: Language
+  menu: MenuGroup[]
+  resources: MetaResource[]
+  reports: MetaReport[]
 }
 
 export interface MenuGroup {
-  module: ModuleName;
-  label: string;
+  module: ModuleName
+  label: string
   /** Resource keys, in registration order. */
-  resources: ResourceKey[];
+  resources: ResourceKey[]
   /** Report keys. */
-  reports: string[];
+  reports: string[]
 }
 
 export type FieldTypeName =
@@ -168,9 +168,9 @@ export type FieldTypeName =
   | 'timestamp'
   | 'enum'
   /** A foreign key whose target the caller can read; see `ref`. */
-  | 'reference';
+  | 'reference'
 
-export type FieldFormat = 'money' | 'percent' | 'multiline';
+export type FieldFormat = 'money' | 'percent' | 'multiline'
 
 export type OperatorName =
   | 'equals'
@@ -182,177 +182,177 @@ export type OperatorName =
   | 'in'
   | 'contains'
   | 'startsWith'
-  | 'isNull';
+  | 'isNull'
 
 export interface EnumValue {
-  value: string;
-  label: string;
+  value: string
+  label: string
 }
 
 /** What fields, action params and report params share. */
 interface TypedInput {
-  name: string;
-  label: string;
-  type: FieldTypeName;
+  name: string
+  label: string
+  type: FieldTypeName
   /** With type "reference": the target resource's key. */
-  ref?: ResourceKey;
+  ref?: ResourceKey
   /** With type "enum". */
-  values?: EnumValue[];
-  required: boolean;
-  maxLength?: number;
+  values?: EnumValue[]
+  required: boolean
+  maxLength?: number
   /** Decimal as a string, also for integer fields. */
-  min?: Decimal;
-  max?: Decimal;
+  min?: Decimal
+  max?: Decimal
   /** Decimals only: digits to show and accept (2 when undeclared). */
-  scale?: number;
+  scale?: number
 }
 
 export interface MetaField extends TypedInput {
-  unique: boolean;
-  format?: FieldFormat;
+  unique: boolean
+  format?: FieldFormat
   /** With format "money": the row's field holding the currency id. Else the company's currency. */
-  currencyField?: string;
-  filterable: boolean;
-  sortable: boolean;
+  currencyField?: string
+  filterable: boolean
+  sortable: boolean
   /** Only on filterable fields. */
-  operators?: OperatorName[];
+  operators?: OperatorName[]
   /** Whether a form may send the field. The server checks again on every write. */
-  writable: { create: boolean; update: boolean };
+  writable: { create: boolean; update: boolean }
 }
 
 /** An action's or a report's parameter: the dialog's or the report form's input. */
-export type MetaParam = TypedInput;
+export type MetaParam = TypedInput
 
 export interface SortKey {
-  field: string;
-  dir: 'asc' | 'desc';
+  field: string
+  dir: 'asc' | 'desc'
 }
 
 export interface MetaResource {
-  key: ResourceKey;
+  key: ResourceKey
   /** Plural. */
-  label: string;
+  label: string
   /** Singular. */
-  labelOne: string;
-  module: ModuleName;
+  labelOne: string
+  module: ModuleName
   /** Base path of the routes: "/masterdata/products". */
-  path: string;
+  path: string
   /** Permissions only; a record's state is in its _meta. */
-  can: { read: true; create: boolean; update: boolean; delete: boolean; history: boolean };
-  idField: string;
-  versionField: string | null;
+  can: { read: true; create: boolean; update: boolean; delete: boolean; history: boolean }
+  idField: string
+  versionField: string | null
   /** Field naming a row (pickers, modal titles). Falls back to the id field. */
-  title: string;
-  subtitle: string | null;
-  listColumns: string[];
+  title: string
+  subtitle: string | null
+  listColumns: string[]
   /** Send it as the QUERY sort on first load. */
-  defaultSort: SortKey[];
-  presentation: 'modal' | 'page';
+  defaultSort: SortKey[]
+  presentation: 'modal' | 'page'
   /** QUERY "search" works. */
-  searchable: boolean;
-  fields: MetaField[];
-  layout: RecordLayout;
+  searchable: boolean
+  fields: MetaField[]
+  layout: RecordLayout
   /** Only those the caller holds the permission for. */
-  actions: MetaAction[];
+  actions: MetaAction[]
 }
 
 export interface RecordLayout {
   /** True when the resource declares no layout and the server derived one. */
-  derived: boolean;
-  sections: LayoutSection[];
-  collections: LayoutCollection[];
+  derived: boolean
+  sections: LayoutSection[]
+  collections: LayoutCollection[]
   /** Read-only, server-computed header fields (totals). */
-  summary: string[];
-  tabs: LayoutTab[];
+  summary: string[]
+  tabs: LayoutTab[]
 }
 
 export interface LayoutSection {
-  name: string;
-  label: string;
+  name: string
+  label: string
   /** Grid columns. */
-  columns: number;
+  columns: number
   /** Header field names, looked up in MetaResource.fields. */
-  fields: string[];
+  fields: string[]
 }
 
 export interface LayoutCollection {
   /** Key of the rows in the document body ("lines"). */
-  name: string;
-  label: string;
+  name: string
+  label: string
   /** The child entity's name. */
-  entity: string;
+  entity: string
   /**
    * The child is a resource: QUERY {that resource's path} where `field`
    * equals the record's id. null: the rows come inside the record (documents).
    */
-  source: { resource: ResourceKey; field: string } | null;
-  editable: boolean;
+  source: { resource: ResourceKey; field: string } | null
+  editable: boolean
   /** Rows can't be added or removed, only edited. */
-  fixedRows: boolean;
-  columns: MetaField[];
+  fixedRows: boolean
+  columns: MetaField[]
   /** Column names whose sum goes in the footer. */
-  footerSums: string[];
+  footerSums: string[]
 }
 
 export interface LayoutTab {
   /** "history" today; later attachments, notes. */
-  name: 'history' | (string & {});
-  label: string;
+  name: 'history' | (string & {})
+  label: string
 }
 
 export interface MetaAction {
-  name: string;
-  label: string;
+  name: string
+  label: string
   /** record: on one record (check its _meta.actions); resource: on the list. */
-  scope: 'record' | 'resource';
-  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+  scope: 'record' | 'resource'
+  method: 'POST' | 'PUT' | 'PATCH' | 'DELETE'
   /** Full path; "{id}" to fill in for record actions. */
-  path: string;
+  path: string
   /** Ask first. The worded question is in the record's _meta.actions[].confirm. */
-  confirm: boolean;
+  confirm: boolean
   /** The dialog's inputs, sent as a JSON body keyed by name. */
-  params: MetaParam[];
+  params: MetaParam[]
 }
 
 export interface MetaReport {
-  key: string;
-  label: string;
-  module: ModuleName;
-  method: 'GET';
+  key: string
+  label: string
+  module: ModuleName
+  method: 'GET'
   /** Run with GET {path}?param=value... */
-  path: string;
-  params: MetaParam[];
+  path: string
+  params: MetaParam[]
   /** Values of the whole answer shown above the rows (opening, closing). */
-  figures: ReportFigure[];
+  figures: ReportFigure[]
   /** Dotted path of the row array in the answer. */
-  rows: string | null;
+  rows: string | null
   /** Row field giving its indentation (chart depth). */
-  level: string | null;
+  level: string | null
   /** Row field marking rows to show in bold (headings). */
-  emphasis: string | null;
-  columns: ReportColumn[];
+  emphasis: string | null
+  columns: ReportColumn[]
   /** Dotted path of the totals object in the answer. */
-  totals: string | null;
+  totals: string | null
 }
 
 export interface ReportFigure {
   /** Dotted path into the answer. */
-  path: string;
-  label: string;
-  type: Exclude<FieldTypeName, 'reference'>;
-  format?: FieldFormat;
+  path: string
+  label: string
+  type: Exclude<FieldTypeName, 'reference'>
+  format?: FieldFormat
 }
 
 export interface ReportColumn {
   /** Dotted path into a row: "amounts.closing". */
-  path: string;
-  label: string;
-  type: Exclude<FieldTypeName, 'reference'>;
-  scale?: number;
-  format?: FieldFormat;
-  values?: EnumValue[];
+  path: string
+  label: string
+  type: Exclude<FieldTypeName, 'reference'>
+  scale?: number
+  format?: FieldFormat
+  values?: EnumValue[]
   /** Dotted path of this column's total inside `totals`, or null. */
-  total: string | null;
+  total: string | null
 }
 
 // ---------------------------------------------------------------------------
@@ -361,25 +361,25 @@ export interface ReportColumn {
 
 /** The name of a referenced record, so lists show names instead of ids. */
 export interface RefTitle {
-  id: Id;
-  title: string;
-  subtitle?: string | null;
+  id: Id
+  title: string
+  subtitle?: string | null
   /** The target was soft-deleted; it keeps its name. */
-  deleted?: boolean;
+  deleted?: boolean
 }
 
 /** What one record allows now: permissions and its state combined. */
 export interface RecordMeta {
-  can: { update: boolean; delete: boolean };
+  can: { update: boolean; delete: boolean }
   /** Fields its state freezes; "*" means all. */
-  locked: string[];
+  locked: string[]
   /** Record actions that apply now, with the confirmation already worded (null: none). */
-  actions: { name: string; confirm: string | null }[];
+  actions: { name: string; confirm: string | null }[]
 }
 
 /** _meta of GET {path}/new. */
 export interface NewRecordMeta {
-  new: true;
+  new: true
 }
 
 /**
@@ -390,9 +390,9 @@ export interface NewRecordMeta {
  * - Documents carry each collection's lines under its name (`lines: Row[]`).
  */
 export interface Row {
-  [field: string]: unknown;
-  _refs?: Record<string, RefTitle>;
-  _meta?: RecordMeta | NewRecordMeta;
+  [field: string]: unknown
+  _refs?: Record<string, RefTitle>
+  _meta?: RecordMeta | NewRecordMeta
 }
 
 /** Server-managed on every row: never send them (READ_ONLY), except `version` on update. */
@@ -403,16 +403,16 @@ export const SERVER_MANAGED_FIELDS = [
   'createdBy',
   'updatedAt',
   'updatedBy',
-  'deletedAt',
-] as const;
+  'deletedAt'
+] as const
 
 export function isNewRecordMeta(m: Row['_meta']): m is NewRecordMeta {
-  return !!m && (m as NewRecordMeta).new === true;
+  return !!m && (m as NewRecordMeta).new === true
 }
 
 /** Is this field frozen by the record's state? */
 export function isLocked(meta: RecordMeta | undefined, field: string): boolean {
-  return !!meta && (meta.locked.includes('*') || meta.locked.includes(field));
+  return !!meta && (meta.locked.includes('*') || meta.locked.includes(field))
 }
 
 // ---------------------------------------------------------------------------
@@ -421,43 +421,40 @@ export function isLocked(meta: RecordMeta | undefined, field: string): boolean {
 
 export interface Condition {
   /** A field, or a relation path: "category.code", "createdByUser.userNo". */
-  field: string;
-  op: OperatorName;
+  field: string
+  op: OperatorName
   /**
    * Scalar for most operators; array (1 to 100) for "in"; boolean for
    * "isNull". Decimals as strings.
    */
-  value: unknown;
+  value: unknown
 }
 
 /** Nest up to 4 levels, at most 20 conditions. */
 export type FilterNode =
-  | Condition
-  | { and: FilterNode[] }
-  | { or: FilterNode[] }
-  | { not: FilterNode };
+  Condition | { and: FilterNode[] } | { or: FilterNode[] } | { not: FilterNode }
 
 /** Every part optional; {} means "first 50 rows, the resource's own order". */
 export interface QuerySpec {
-  where?: FilterNode;
+  where?: FilterNode
   /** At most 3 keys; ties broken by id. */
-  sort?: SortKey[];
+  sort?: SortKey[]
   /** limit 1 to 200 (default 50), offset >= 0. */
-  page?: { limit?: number; offset?: number };
+  page?: { limit?: number; offset?: number }
   /** At most 100 characters: title starts with, or subtitle contains. */
-  search?: string;
+  search?: string
 }
 
 export interface PageInfo {
-  limit: number;
-  offset: number;
+  limit: number
+  offset: number
   /** Another page follows. There is no total count. */
-  hasMore: boolean;
+  hasMore: boolean
 }
 
 export interface ListResponse<T = Row> {
-  data: T[];
-  page: PageInfo;
+  data: T[]
+  page: PageInfo
 }
 
 // ---------------------------------------------------------------------------
@@ -465,12 +462,12 @@ export interface ListResponse<T = Row> {
 // ---------------------------------------------------------------------------
 
 /** POST {path}: the new row's writable fields (and, for documents, each collection's lines). */
-export type CreateBody = Record<string, unknown>;
+export type CreateBody = Record<string, unknown>
 
 /** PATCH {path}/{id}: the version last read and only the changed fields. */
 export interface UpdateBody {
-  version: number;
-  [field: string]: unknown;
+  version: number
+  [field: string]: unknown
 }
 
 /**
@@ -479,17 +476,17 @@ export interface UpdateBody {
  * a collection left out of a PATCH keeps its lines.
  */
 export interface DocumentLineBody {
-  id?: Id;
-  [field: string]: unknown;
+  id?: Id
+  [field: string]: unknown
 }
 
 /** POST {path}/calculate and POST {path}/{id}/calculate: nothing is saved. */
 export interface CalculateResponse {
-  document: Row;
+  document: Row
   /** Non-blocking, translated. */
-  warnings: FieldError[];
+  warnings: FieldError[]
   /** What a save would report now. */
-  errors: FieldError[];
+  errors: FieldError[]
 }
 
 // ---------------------------------------------------------------------------
@@ -497,40 +494,40 @@ export interface CalculateResponse {
 // ---------------------------------------------------------------------------
 
 export interface FieldChange {
-  old: unknown;
-  new: unknown;
+  old: unknown
+  new: unknown
 }
 
 /** A field the caller may not read: it changed, to what is hidden. */
 export interface MaskedChange {
-  masked: true;
+  masked: true
 }
 
 /** A document collection's changes in one save. */
 export interface CollectionChange {
-  added?: Row[];
+  added?: Row[]
   /** By line id: field -> change. */
-  changed?: Record<string, Record<string, FieldChange | MaskedChange>>;
-  removed?: Id[];
+  changed?: Record<string, Record<string, FieldChange | MaskedChange>>
+  removed?: Id[]
 }
 
 export interface HistoryEntry {
-  id: Id;
+  id: Id
   /** CREATED, UPDATED, DELETED, POSTED... */
-  action: string;
-  occurredAt: Instant;
-  user: { id: Id; userNo: string; name: string };
-  requestId?: string;
+  action: string
+  occurredAt: Instant
+  user: { id: Id; userNo: string; name: string }
+  requestId?: string
   /** Only fields whose value really changed. DELETED carries none. */
-  changes?: Record<string, FieldChange | MaskedChange | CollectionChange>;
+  changes?: Record<string, FieldChange | MaskedChange | CollectionChange>
   /** Translated; generic histories only (not the hand-written GL / scheduler ones yet). */
-  actionLabel?: string;
+  actionLabel?: string
   /** Field name -> translated label, for the changed fields. */
-  labels?: Record<string, string>;
+  labels?: Record<string, string>
 }
 
 export function isMaskedChange(c: unknown): c is MaskedChange {
-  return typeof c === 'object' && c !== null && (c as MaskedChange).masked === true;
+  return typeof c === 'object' && c !== null && (c as MaskedChange).masked === true
 }
 
 // ---------------------------------------------------------------------------
@@ -539,13 +536,13 @@ export function isMaskedChange(c: unknown): c is MaskedChange {
 
 export interface ApiHeaders {
   /** Never on POST /auth/login. */
-  Authorization?: `Bearer ${string}`;
+  Authorization?: `Bearer ${string}`
   /** Required when the user has several companies and no default. */
-  'X-Company-Id'?: string;
+  'X-Company-Id'?: string
   /** Echoed back; printed on every server log line. */
-  'X-Request-Id'?: string;
+  'X-Request-Id'?: string
   /** For documents posted as they are created. */
-  'Idempotency-Key'?: string;
+  'Idempotency-Key'?: string
   /** GET /meta: a 304 until the answer changes. */
-  'If-None-Match'?: string;
+  'If-None-Match'?: string
 }

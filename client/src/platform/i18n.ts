@@ -45,7 +45,51 @@ const TEXTS = {
   screenPending: {
     fr: 'Cet écran arrive bientôt.',
     en: 'This screen is coming soon.'
-  }
+  },
+  yes: { fr: 'Oui', en: 'Yes' },
+  no: { fr: 'Non', en: 'No' },
+
+  // Lists
+  search: { fr: 'Rechercher', en: 'Search' },
+  refresh: { fr: 'Actualiser', en: 'Refresh' },
+  columns: { fr: 'Colonnes', en: 'Columns' },
+  noRows: { fr: 'Aucune ligne', en: 'No rows' },
+  rowsRange: { fr: 'Lignes {from} à {to}', en: 'Rows {from} to {to}' },
+  rowsPerPage: { fr: 'Par page', en: 'Per page' },
+  previousPage: { fr: 'Précédente', en: 'Previous' },
+  nextPage: { fr: 'Suivante', en: 'Next' },
+  sortHint: {
+    fr: 'Cliquer pour trier, Maj+clic pour ajouter un tri',
+    en: 'Click to sort, Shift+click to add a sort'
+  },
+
+  // Filters
+  filters: { fr: 'Filtres', en: 'Filters' },
+  addFilter: { fr: 'Ajouter un filtre', en: 'Add filter' },
+  clearFilters: { fr: 'Tout effacer', en: 'Clear all' },
+  apply: { fr: 'Appliquer', en: 'Apply' },
+  field: { fr: 'Champ', en: 'Field' },
+  operator: { fr: 'Condition', en: 'Condition' },
+  value: { fr: 'Valeur', en: 'Value' },
+  valuesHint: { fr: 'Entrée après chaque valeur', en: 'Enter after each value' },
+  invalidValue: { fr: 'Valeur invalide', en: 'Invalid value' },
+  tooManyFilters: { fr: 'Au plus {max} filtres', en: 'At most {max} filters' },
+  'op.equals': { fr: 'est', en: 'is' },
+  'op.notEquals': { fr: "n'est pas", en: 'is not' },
+  'op.greaterThan': { fr: 'plus grand que', en: 'greater than' },
+  'op.greaterThanOrEquals': { fr: 'au moins', en: 'at least' },
+  'op.lessThan': { fr: 'plus petit que', en: 'less than' },
+  'op.lessThanOrEquals': { fr: 'au plus', en: 'at most' },
+  'op.in': { fr: "est l'un de", en: 'is one of' },
+  'op.contains': { fr: 'contient', en: 'contains' },
+  'op.startsWith': { fr: 'commence par', en: 'starts with' },
+  'op.isEmpty': { fr: 'est vide', en: 'is empty' },
+  'op.isNotEmpty': { fr: "n'est pas vide", en: 'is not empty' },
+  // Dates and times read better as before / after.
+  'op.date.greaterThan': { fr: 'après le', en: 'after' },
+  'op.date.greaterThanOrEquals': { fr: 'depuis le', en: 'on or after' },
+  'op.date.lessThan': { fr: 'avant le', en: 'before' },
+  'op.date.lessThanOrEquals': { fr: "jusqu'au", en: 'on or before' }
 } as const satisfies Record<string, Record<Language, string>>
 
 export type TextKey = keyof typeof TEXTS

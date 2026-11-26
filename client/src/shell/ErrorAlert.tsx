@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Text } from '@mantine/core'
+import { Alert, Button, Code, Group, List, Text } from '@mantine/core'
 import { ApiError } from '../api/client'
 import { useText } from '../platform/useText'
 
@@ -17,17 +17,28 @@ export function ErrorAlert({
   let title: string
   let detail: string | undefined
   let requestId: string | undefined
+  let fieldErrors: { field: string; message: string }[] = []
   if (error instanceof ApiError) {
     const p = error.problem
     title = p.code === 'NETWORK_ERROR' ? t('serverUnreachable') : p.title
     detail = p.detail
     requestId = p.requestId
+    fieldErrors = p.errors ?? []
   } else {
     title = error instanceof Error ? error.message : String(error)
   }
   return (
     <Alert color="red" title={title}>
       {detail && <Text size="sm">{detail}</Text>}
+      {fieldErrors.length > 0 && (
+        <List size="sm" mt={4}>
+          {fieldErrors.map((e) => (
+            <List.Item key={e.field}>
+              <Code>{e.field}</Code> {e.message}
+            </List.Item>
+          ))}
+        </List>
+      )}
       {requestId && (
         <Text size="xs" c="dimmed" mt={4} style={{ userSelect: 'text' }}>
           {t('requestId')}: {requestId}
