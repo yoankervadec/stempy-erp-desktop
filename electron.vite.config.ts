@@ -6,9 +6,11 @@ export default defineConfig({
   main: {},
   preload: {},
   renderer: {
-    resolve: {
-      alias: {
-        '@renderer': resolve('src/renderer/src')
+    // The renderer (the React client) lives in client/, outside src/.
+    root: 'client',
+    build: {
+      rollupOptions: {
+        input: resolve('client/index.html')
       }
     },
     plugins: [react()]

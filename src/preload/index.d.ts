@@ -1,8 +1,7 @@
-import { ElectronAPI } from '@electron-toolkit/preload'
+import type { StempyBridge } from '../shared/bridge'
 
 declare global {
   interface Window {
-    electron: ElectronAPI
-    api: unknown
+    stempy: StempyBridge
   }
 }
