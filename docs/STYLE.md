@@ -46,12 +46,19 @@ there, not with inline styles on a screen.
 ## Layout
 
 - **App header:** a solid `forest-8` band, 36px high. It holds:
-  - the menu toggle
+  - the menu button (only while the menu bar is unpinned)
   - the app name
   - the command bar in the center (step 4)
   - the company and user menus
-- **Left:** the navigation tree from `/meta.menu`. The toggle collapses it, and the
-  choice is kept in `localStorage` (`stempy.navOpen`).
+- **Menu bar:** a 30px bar under the app header, built from `/meta.menu`.
+  - Each module is a dropdown listing its resources, then a rule, then its reports.
+  - The module holding the open page is underlined in the accent color.
+  - **Pinned** (the default): the bar always shows and the page sits below it.
+  - **Unpinned:** the bar is hidden. The menu button shows it over the page, and it
+    hides again on navigation, `Esc` or a click outside.
+  - The pin button sits at the right end of the bar. The choice is kept in
+    `localStorage` (`stempy.menuPinned`).
+  - There is no side navigation.
 - **Page:** every signed-in screen renders `<Page>` (`client/src/shell/Page.tsx`), a
   sticky gray header band. In order, it holds:
   - an optional parent link (the breadcrumb)

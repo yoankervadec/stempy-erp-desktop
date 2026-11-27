@@ -36,11 +36,64 @@
   padding: 0 8px;
 }
 
-.navbar {
-  padding: 4px;
+/* The menu bar under the application bar: one flat button per module. */
+.menuBar {
+  display: flex;
+  align-items: stretch;
+  justify-content: space-between;
+  height: 30px;
+  padding: 0 4px;
+  color: var(--mantine-color-text);
+  background-color: var(--mantine-color-body);
+  border-bottom: 1px solid var(--mantine-color-default-border);
 }
 
-/* Module headings in the menu: bold, so the tree reads at a glance. */
-.group > :global(.mantine-NavLink-body) > :global(.mantine-NavLink-label) {
+.menuGroups {
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.menuButton {
+  padding: 0 10px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 500;
+  border-bottom: 2px solid transparent;
+}
+
+.menuButton:hover,
+.menuButton[aria-expanded='true'] {
+  background-color: var(--mantine-color-default-hover);
+}
+
+/* The module holding the open page. */
+.menuButton[data-active] {
+  border-bottom-color: var(--mantine-primary-color-filled);
   font-weight: 600;
+}
+
+.menuBar :global(.mantine-Menu-item[data-active]) {
+  font-weight: 600;
+  background-color: var(--mantine-primary-color-light);
+}
+
+.pinButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  color: var(--mantine-color-dimmed);
+}
+
+.pinButton:hover,
+.pinButton[aria-pressed='true'] {
+  color: var(--mantine-color-text);
+}
+
+/* Unpinned: the bar shows over the page, under the application bar. */
+.floatingBar {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  box-shadow: var(--mantine-shadow-sm);
 }

@@ -1,16 +1,8 @@
-import {
-  AppShell,
-  Button,
-  Group,
-  Menu,
-  NavLink,
-  ScrollArea,
-  Text,
-  UnstyledButton
-} from '@mantine/core'
-import { useLocalStorage } from '@mantine/hooks'
+import { AppShell, Button, Group, Menu, Text, UnstyledButton } from '@mantine/core'
+import { useClickOutside, useHotkeys, useLocalStorage } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
+import { useState } from 'react'
 import type { LanguageChoice } from '../../../src/shared/bridge'
 import { ApiError } from '../api/client'
 import { useMeta } from '../platform/meta'
@@ -106,42 +98,102 @@ function UserMenu(): React.JSX.Element {
   )
 }
 
-/** The menu, from /meta.menu: one group per module, its resources then its reports. */
-function Navigation(): React.JSX.Element {
+const BAR_HEIGHT = 30
+const HEADER_HEIGHT = 36
+
+function PinIcon({ pinned }: { pinned: boolean }): React.JSX.Element {
+  return (
+    <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
+      <path
+        d="M4 1h4M5 1v4L3 7h6L7 5V1M6 7v4"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        fill={pinned ? 'currentColor' : 'none'}
+      />
+    </svg>
+  )
+}
+
+/**
+ * The menu bar, from /meta.menu: one dropdown per module, its resources then its
+ * reports. The module holding the open page is marked.
+ */
+function MenuBar({
+  pinned,
+  onTogglePin,
+  onNavigate
+}: {
+  pinned: boolean
+  onTogglePin: () => void
+  onNavigate: () => void
+}): React.JSX.Element {
+  const t = useText()
   const meta = useMeta()
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const label = (key: string, list: { key: string; label: string }[]): string =>
     list.find((x) => x.key === key)?.label ?? key
+  const isResource = (key: string): boolean =>
+    pathname === `/r/${key}` || pathname.startsWith(`/r/${key}/`)
+  const isReport = (key: string): boolean => pathname === `/reports/${key}`
+  const go = (to: () => Promise<void>): void => {
+    onNavigate()
+    void to()
+  }
+
   return (
-    <ScrollArea>
-      {meta.menu.map((group) => (
-        <NavLink
-          key={group.module}
-          label={group.label}
-          defaultOpened
-          childrenOffset="sm"
-          className={classes.group}
-        >
-          {group.resources.map((key) => (
-            <NavLink
-              key={key}
-              label={label(key, meta.resources)}
-              active={pathname === `/r/${key}` || pathname.startsWith(`/r/${key}/`)}
-              onClick={() => navigate({ to: '/r/$resourceKey', params: { resourceKey: key } })}
-            />
-          ))}
-          {group.reports.map((key) => (
-            <NavLink
-              key={key}
-              label={label(key, meta.reports)}
-              active={pathname === `/reports/${key}`}
-              onClick={() => navigate({ to: '/reports/$reportKey', params: { reportKey: key } })}
-            />
-          ))}
-        </NavLink>
-      ))}
-    </ScrollArea>
+    <nav className={classes.menuBar} aria-label={t('menu')}>
+      <Group gap={0} wrap="nowrap" className={classes.menuGroups}>
+        {meta.menu.map((group) => {
+          const active = group.resources.some(isResource) || group.reports.some(isReport)
+          return (
+            // Not portaled: an unpinned bar closes on a click outside it, and its
+            // dropdowns must count as inside.
+            <Menu key={group.module} position="bottom-start" offset={0} withinPortal={false}>
+              <Menu.Target>
+                <UnstyledButton className={classes.menuButton} data-active={active || undefined}>
+                  {group.label}
+                </UnstyledButton>
+              </Menu.Target>
+              <Menu.Dropdown miw={200}>
+                {group.resources.map((key) => (
+                  <Menu.Item
+                    key={key}
+                    data-active={isResource(key) || undefined}
+                    onClick={() =>
+                      go(() => navigate({ to: '/r/$resourceKey', params: { resourceKey: key } }))
+                    }
+                  >
+                    {label(key, meta.resources)}
+                  </Menu.Item>
+                ))}
+                {group.resources.length > 0 && group.reports.length > 0 && <Menu.Divider />}
+                {group.reports.map((key) => (
+                  <Menu.Item
+                    key={key}
+                    data-active={isReport(key) || undefined}
+                    onClick={() =>
+                      go(() => navigate({ to: '/reports/$reportKey', params: { reportKey: key } }))
+                    }
+                  >
+                    {label(key, meta.reports)}
+                  </Menu.Item>
+                ))}
+              </Menu.Dropdown>
+            </Menu>
+          )
+        })}
+      </Group>
+      <UnstyledButton
+        className={classes.pinButton}
+        aria-pressed={pinned}
+        aria-label={pinned ? t('unpinMenu') : t('pinMenu')}
+        title={pinned ? t('unpinMenu') : t('pinMenu')}
+        onClick={onTogglePin}
+      >
+        <PinIcon pinned={pinned} />
+      </UnstyledButton>
+    </nav>
   )
 }
 
@@ -157,27 +209,40 @@ export function AppLayout(): React.JSX.Element {
   const t = useText()
   const navigate = useNavigate()
   // A layout preference, not a secret: kept across sessions in localStorage.
-  const [navOpen, setNavOpen] = useLocalStorage({ key: 'stempy.navOpen', defaultValue: true })
+  const [pinned, setPinned] = useLocalStorage({ key: 'stempy.menuPinned', defaultValue: true })
+  // Unpinned, the bar shows over the page until a page is chosen or the user looks away.
+  const [shown, setShown] = useState(false)
+  const header = useClickOutside(() => setShown(false))
+  useHotkeys([['Escape', () => setShown(false)]], [], true)
+  const barVisible = pinned || shown
+
   return (
     <AppShell
-      header={{ height: 36 }}
-      navbar={{ width: 220, breakpoint: 0, collapsed: { desktop: !navOpen, mobile: !navOpen } }}
+      header={{ height: pinned ? HEADER_HEIGHT + BAR_HEIGHT : HEADER_HEIGHT }}
       padding={0}
       transitionDuration={0}
     >
-      <AppShell.Header className={classes.header}>
-        <Group h="100%" px="xs" justify="space-between" wrap="nowrap">
+      <AppShell.Header className={classes.header} ref={header}>
+        <Group h={HEADER_HEIGHT} px="xs" justify="space-between" wrap="nowrap">
           <Group gap={6} wrap="nowrap">
+            {!pinned && (
+              <UnstyledButton
+                className={classes.headerIcon}
+                aria-label={t('toggleMenu')}
+                title={t('toggleMenu')}
+                aria-expanded={shown}
+                onClick={() => setShown((o) => !o)}
+              >
+                <MenuIcon />
+              </UnstyledButton>
+            )}
             <UnstyledButton
-              className={classes.headerIcon}
-              aria-label={t('toggleMenu')}
-              title={t('toggleMenu')}
-              aria-expanded={navOpen}
-              onClick={() => setNavOpen((o) => !o)}
+              className={classes.appName}
+              onClick={() => {
+                setShown(false)
+                void navigate({ to: '/' })
+              }}
             >
-              <MenuIcon />
-            </UnstyledButton>
-            <UnstyledButton className={classes.appName} onClick={() => navigate({ to: '/' })}>
               {t('appName')}
             </UnstyledButton>
           </Group>
@@ -187,10 +252,19 @@ export function AppLayout(): React.JSX.Element {
             <UserMenu />
           </Group>
         </Group>
+        {barVisible && (
+          <div className={pinned ? undefined : classes.floatingBar}>
+            <MenuBar
+              pinned={pinned}
+              onTogglePin={() => {
+                setPinned((p) => !p)
+                setShown(false)
+              }}
+              onNavigate={() => setShown(false)}
+            />
+          </div>
+        )}
       </AppShell.Header>
-      <AppShell.Navbar className={classes.navbar}>
-        <Navigation />
-      </AppShell.Navbar>
       <AppShell.Main>
         <Outlet />
       </AppShell.Main>
