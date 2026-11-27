@@ -1,4 +1,4 @@
-import { Alert, Button, Group, Select, Stack, Text, TextInput } from '@mantine/core'
+import { Alert, Badge, Button, Group, Select, Stack, Text, TextInput } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
@@ -12,12 +12,26 @@ import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
 import { isBoolean, usePreference } from '../platform/preferences'
+import { useSessionInfo } from '../platform/session'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
 import { ErrorAlert } from '../shell/ErrorAlert'
 import { Page, type ActionGroups } from '../shell/Page'
 import { ColumnsPanel } from './ColumnsPanel'
 import { FilterPane } from './FilterPane'
+import type { ViewsControl } from './ViewsSection'
+import {
+  EMPTY_VIEWS,
+  isListViews,
+  newViewId,
+  readViews,
+  sameAsView,
+  toApplied,
+  toSaved,
+  toSort,
+  viewsKey,
+  type ListView
+} from './views'
 import {
   defaultWidth,
   EMPTY_LAYOUT,
@@ -83,12 +97,22 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const widths = useMemo(() => resolveWidths(resource, layout.widths), [resource, layout.widths])
   const sorting = useMemo(() => resolveSorting(resource, layout.sort), [resource, layout.sort])
   const limit = resolvePageSize(layout.pageSize)
-  const [filters, setFilters] = useState<AppliedFilter[]>([])
+  // Saved views (filters, search, sort), per company; the list opens on the last one used.
+  const { companyId } = useSessionInfo()
+  const [storedViews, setStoredViews] = usePreference(
+    viewsKey(resource.key, companyId ?? 0),
+    EMPTY_VIEWS,
+    isListViews
+  )
+  const savedViews = useMemo(() => readViews(resource, storedViews), [resource, storedViews])
+  const [activeViewId, setActiveViewId] = useState<string | null>(() => savedViews.last ?? null)
+  const activeView = savedViews.views.find((v) => v.id === activeViewId)
+  const [filters, setFilters] = useState<AppliedFilter[]>(() => toApplied(activeView))
   // Shared by every list.
   const [paneOpen, setPaneOpen] = usePreference('list.filterPaneOpen', true, isBoolean)
   const canFilter = filterableFields(resource).length > 0
   const [activeCell, setActiveCell] = useState<ActiveCell<Row> | null>(null)
-  const [searchInput, setSearchInput] = useState('')
+  const [searchInput, setSearchInput] = useState(() => activeView?.search ?? '')
   const [search] = useDebouncedValue(searchInput.trim(), 300)
   const [offset, setOffset] = useState(0)
 
@@ -211,6 +235,57 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const resetColumns = (): void =>
     patchLayout({ order: undefined, visible: undefined, widths: undefined })
 
+  const writeViews = (views: ListView[], last: string | null): void =>
+    setStoredViews({ views, ...(last ? { last } : {}) })
+  const shownNow = (): Omit<ListView, 'id' | 'name'> => ({
+    filters: toSaved(filters),
+    ...(searchInput.trim() ? { search: searchInput.trim() } : {}),
+    sort: toSort(sorting)
+  })
+  const viewsControl: ViewsControl = {
+    views: savedViews.views,
+    activeId: activeView?.id ?? null,
+    // "All" too: it is modified once a filter or a search narrows it.
+    modified: activeView
+      ? !sameAsView(activeView, filters, searchInput.trim(), sorting)
+      : filters.length > 0 || searchInput.trim() !== '',
+    select: (id) => {
+      const view = savedViews.views.find((v) => v.id === id)
+      setActiveViewId(view?.id ?? null)
+      setFilters(toApplied(view))
+      setSearchInput(view?.search ?? '')
+      if (view?.sort) patchLayout({ sort: view.sort })
+      writeViews(savedViews.views, view?.id ?? null)
+    },
+    saveAs: (name) => {
+      const view: ListView = { id: newViewId(), name, ...shownNow() }
+      setActiveViewId(view.id)
+      writeViews([...savedViews.views, view], view.id)
+    },
+    save: () => {
+      if (!activeView) return
+      writeViews(
+        savedViews.views.map((v) => (v.id === activeView.id ? { ...v, ...shownNow() } : v)),
+        activeView.id
+      )
+    },
+    rename: (name) => {
+      if (!activeView) return
+      writeViews(
+        savedViews.views.map((v) => (v.id === activeView.id ? { ...v, name } : v)),
+        activeView.id
+      )
+    },
+    remove: () => {
+      if (!activeView) return
+      setActiveViewId(null)
+      writeViews(
+        savedViews.views.filter((v) => v.id !== activeView.id),
+        null
+      )
+    }
+  }
+
   const rows = list.data?.data ?? []
   const page = list.data?.page
   const hasMore = page?.hasMore ?? false
@@ -327,6 +402,14 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   return (
     <Page
       title={resource.label}
+      badge={
+        activeView && (
+          <Badge title={viewsControl.modified ? t('viewModified') : undefined}>
+            {activeView.name}
+            {viewsControl.modified && ' *'}
+          </Badge>
+        )
+      }
       actions={actions}
       tools={tools}
       commands={[
@@ -347,7 +430,21 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
               }
             ]
           : []),
-        { id: 'resetColumns', label: t('resetColumns'), run: resetColumns }
+        { id: 'resetColumns', label: t('resetColumns'), run: resetColumns },
+        ...(canFilter
+          ? [
+              {
+                id: 'view:all',
+                label: `${t('view')}: ${t('allRecords')}`,
+                run: () => viewsControl.select(null)
+              },
+              ...savedViews.views.map((v) => ({
+                id: `view:${v.id}`,
+                label: `${t('view')}: ${v.name}`,
+                run: () => viewsControl.select(v.id)
+              }))
+            ]
+          : [])
       ]}
       flush
     >
@@ -357,6 +454,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
           filters={filters}
           onChange={setFilters}
           onClose={() => setPaneOpen(false)}
+          views={viewsControl}
         />
       )}
       <Stack gap="sm" className={classes.content}>

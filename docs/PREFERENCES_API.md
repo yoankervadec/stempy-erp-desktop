@@ -1,4 +1,4 @@
-# User preferences API (proposed)
+# User preferences API
 
 The desktop client keeps each user's layout choices: list columns (order, width, shown or
 hidden), sort, page size, saved filter views, menu choices, the menu bar pinned or not.
@@ -63,12 +63,17 @@ PUT /auth/me/preferences/list.product
 
 ## Limits and errors
 
+As built on the server (branch `feat/user-preferences`):
+
 | Rule | Error |
 |---|---|
-| Key: `^[A-Za-z0-9._:@-]{1,100}$` | `400`, `errors[]` with `field: "key"` |
-| Body has `value` (not `null`) | `400`, `field: "value"` |
-| `value` as JSON at most 64 KB | `400`, `field: "value"` (a code like `TOO_LARGE`) |
-| At most 500 keys per user | `400` or `409`, a code like `TOO_MANY_PREFERENCES` |
+| Key: `^[A-Za-z0-9._:@-]{1,100}$` (case-sensitive) | `422 VALIDATION_FAILED`, `errors[]` with `field: "key"` |
+| Body has `value` (not `null`) | `422 VALIDATION_FAILED`, `field: "value"` |
+| `value` as JSON at most 64 KB (UTF-8 bytes) | `422 VALIDATION_FAILED`, `field: "value"`, code `VALUE_TOO_LARGE` |
+| At most 500 keys per user (replacing a key always works) | `409 TOO_MANY_PREFERENCES` |
+
+Values come back as sent (stored as text, not a JSON column, so object keys keep their
+order); a number may come back spelled differently (`1.50` as `1.5`).
 
 Errors use the usual problem body (API_GUIDE section 2). The client does not interrupt the
 user for them: it logs them, and the next change tries again.
@@ -82,7 +87,7 @@ The client owns the key names. They are listed here only so a stored row can be 
 | `shell.menuPinned` | `boolean`, the menu bar always visible |
 | `list.filterPaneOpen` | `boolean`, the filter pane open on every list |
 | `list.<resourceKey>` | `{ order?: string[], visible?: {name: boolean}, widths?: {name: px}, sort?: [{field, dir}], pageSize?: number }` |
-| `views.<resourceKey>@<companyId>` | (step 3) the list's saved filter views in one company: filter values name that company's records |
+| `views.<resourceKey>@<companyId>` | `{ views: [{ id, name, filters: [{ field, choice, value?, display }], search?, sort? }], last?: id }`: the list's saved views in one company (filter values can name its records); `last` is the one the list opens on |
 | `menu` | (step 4) hidden menu entries, order, favourites |
 
 ## Storage suggestion

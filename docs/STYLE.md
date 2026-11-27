@@ -81,6 +81,16 @@ there, not with inline styles on a screen.
   - The "Filters (n)" tool in the page header toggles the pane. Its state is shared by
     all lists and kept as a user preference (`list.filterPaneOpen`).
   - Filters stay applied while the pane is closed.
+- **Saved views** (Business Central) sit at the top of the filter pane: "All", then the
+  list's views. A view holds filters (with their display text), search and sort.
+  - The active view is marked, and named in a badge beside the page title.
+  - "(modified)" and a `*` in the badge when the list no longer matches it; "All" is
+    modified once a filter or a search narrows it.
+  - Save (the active view), Save as..., Rename, Delete (asks first). Each view is also a
+    "View: name" command in the command bar.
+  - The list opens on the last view chosen. Views are a user preference per list and
+    company (`views.<resourceKey>@<companyId>`); filters on fields no longer filterable
+    are dropped when read.
 - **List columns** have fixed widths (NAV), from the field's type until the user changes
   them; the grid is as wide as its columns, not stretched.
   - Drag a header's right edge to resize; double-click the edge for the default width.

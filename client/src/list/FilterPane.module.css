@@ -45,3 +45,35 @@
   color: var(--mantine-color-dimmed);
   cursor: default;
 }
+
+/* Saved views, above the conditions: "All", then each view; the active one marked. */
+.views {
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.sectionTitle {
+  padding: 6px 8px 2px;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.view {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+  width: 100%;
+  padding: 3px 8px 3px 5px;
+  border-left: 3px solid transparent;
+}
+
+.view:hover {
+  background-color: var(--mantine-color-default-hover);
+}
+
+.view[data-active] {
+  border-left-color: var(--mantine-primary-color-filled);
+  background-color: var(--mantine-primary-color-light);
+}

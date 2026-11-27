@@ -14,6 +14,7 @@ import {
   type FilterChoice
 } from './filters'
 import { FilterValueInput, type FilterValue } from './FilterValueInput'
+import { ViewsSection, type ViewsControl } from './ViewsSection'
 
 let nextId = 0
 
@@ -102,12 +103,14 @@ export function FilterPane({
   resource,
   filters,
   onChange,
-  onClose
+  onClose,
+  views
 }: {
   resource: MetaResource
   filters: AppliedFilter[]
   onChange: (filters: AppliedFilter[]) => void
   onClose: () => void
+  views: ViewsControl
 }): React.JSX.Element {
   const t = useText()
   const [adding, setAdding] = useState(false)
@@ -123,6 +126,8 @@ export function FilterPane({
         </Text>
         <CloseButton size="sm" aria-label={t('close')} title={t('close')} onClick={onClose} />
       </Group>
+
+      <ViewsSection control={views} />
 
       {filters.length === 0 && !adding && (
         <Text size="sm" c="dimmed" px={8} py={6}>
