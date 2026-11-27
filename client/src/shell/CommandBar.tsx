@@ -9,6 +9,7 @@ import {
   type CommandLevel
 } from '../platform/commands'
 import { useMeta } from '../platform/meta'
+import { formatHotkey, isEditable, isHotkey } from '../platform/hotkeys'
 import { useText } from '../platform/useText'
 import classes from './CommandBar.module.css'
 import type { ActionGroups } from './Page'
@@ -27,7 +28,7 @@ export function CommandLayer({
     ...actions.flat().map((a) => ({
       id: a.key,
       label: a.label,
-      shortcut: a.shortcut,
+      hotkey: a.hotkey,
       disabled: a.disabled || a.loading,
       run: a.onClick
     })),
@@ -178,7 +179,7 @@ function Palette({
                     {c.label}
                     {c.hint && <span className={classes.hint}>{c.hint}</span>}
                   </span>
-                  {c.shortcut && <Kbd size="xs">{c.shortcut}</Kbd>}
+                  {c.hotkey && <Kbd size="xs">{formatHotkey(c.hotkey)}</Kbd>}
                 </div>
               )
             })}
@@ -209,6 +210,26 @@ export function CommandBar({ appCommands }: { appCommands: Command[] }): React.J
     ])
   }
 
+  // The front-most layer's shortcuts, from anywhere (inside inputs too: they all carry a
+  // modifier or are function keys). Not while the bar itself is open.
+  useEffect(() => {
+    if (!store || sections) return
+    const onKey = (e: KeyboardEvent): void => {
+      const c = store.current().find(
+        (x) =>
+          x.hotkey &&
+          // Cmd+Backspace deletes text in a field: never a record from there.
+          !(x.hotkey.includes('backspace') && isEditable(e.target)) &&
+          isHotkey(e, x.hotkey)
+      )
+      if (!c) return
+      e.preventDefault()
+      if (!c.disabled) c.run()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [store, sections])
+
   // Inside inputs too: the bar is reachable from anywhere.
   useHotkeys(
     [
@@ -223,7 +244,7 @@ export function CommandBar({ appCommands }: { appCommands: Command[] }): React.J
       <UnstyledButton className={classes.trigger} onClick={open}>
         <span>{t('commandBarPlaceholder')}</span>
         <Kbd size="xs" className={classes.triggerKey}>
-          Alt+Q
+          {formatHotkey('alt+q')}
         </Kbd>
       </UnstyledButton>
       <Modal

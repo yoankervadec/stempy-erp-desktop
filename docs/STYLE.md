@@ -102,20 +102,38 @@ there, not with inline styles on a screen.
     it opens.
 - `PageAction.shortcut` is shown beside a command.
 
-## Keyboard (target; inspired by NAV / Business Central)
+## Keyboard
 
-| Key                    | Command                                              |
-| ---------------------- | ---------------------------------------------------- |
-| `Alt+Q`, `Ctrl+K`      | command bar: pages, then the current page's commands |
-| `Ctrl+N`               | new                                                  |
-| `Ctrl+E`               | edit list                                            |
-| `Enter`                | open the selected row                                |
-| `Ctrl+Delete`          | delete                                               |
-| `F5`                   | refresh                                              |
-| `Shift+F3`             | toggle the filter pane                               |
-| `Alt+F3`               | filter on the current cell's value                   |
-| arrows, `PgUp`, `PgDn` | move through the grid                                |
-| `Esc`                  | close the dialog or panel                            |
+Shortcuts are part of the commands: give a `PageAction` (or a `Command`) a `hotkey` in
+Mantine's notation, and it is shown in the command bar and on hover.
 
-Every command the keyboard can reach is also listed in the command bar, with its
-shortcut shown.
+- One window listener runs the front-most layer's hotkeys, even from inside a field
+  (every page hotkey has a modifier or is a function key). A record modal covers its
+  page.
+- A confirmation or action dialog registers an empty layer, so no page shortcut acts
+  under it.
+- Keys are matched on physical keys. `mod` is Cmd on a Mac and Ctrl elsewhere, and Alt is
+  shown as Option on a Mac.
+
+| Key                             | Command                                          | Where      |
+| ------------------------------- | ------------------------------------------------ | ---------- |
+| `Alt+Q`, `Ctrl+K` / `Cmd+K`     | command bar                                      | everywhere |
+| `Ctrl+N` / `Cmd+N`              | new                                              | list       |
+| `F5`                            | refresh                                          | list       |
+| `Shift+F3`                      | show or hide the filter pane                     | list       |
+| `Alt+F3`                        | filter on the value of the cell the cursor is on | list       |
+| `Ctrl+S` / `Cmd+S`              | save                                             | record     |
+| `Ctrl+Delete` / `Cmd+Backspace` | delete (asks first)                              | record     |
+| `Ctrl+E`                        | edit list (step 6)                               | list       |
+| `Esc`                           | close the command bar, a dialog or a modal       | everywhere |
+
+On a Mac, `Cmd+Backspace` is ignored while you type in a field, where it deletes text.
+
+The grid (`grid/DataGrid.tsx`) is one focusable element with a cell cursor:
+
+- Arrow keys move the cursor. `PgUp` / `PgDn` move 10 rows.
+- `Home` / `End` go to the row's first or last cell; with `Ctrl`, to the first or last
+  row.
+- `Enter` opens the row.
+- A click moves the cursor. A click in the first column (drawn as a link) or a double
+  click opens the row.

@@ -32,6 +32,7 @@ import type { CalculateResponse, FieldError, Id, MetaAction, MetaResource, Row }
 import { isNewRecordMeta } from '../api/types'
 import { FieldInput } from '../fields/FieldInput'
 import { formatValue } from '../platform/format'
+import { DELETE_HOTKEY } from '../platform/hotkeys'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
@@ -312,6 +313,7 @@ function RecordEditor({
   const saveAction: PageAction = {
     key: 'save',
     label: t('save'),
+    hotkey: 'mod+s',
     primary: true,
     loading: saving,
     disabled: !creating && !dirty,
@@ -325,6 +327,7 @@ function RecordEditor({
   const deleteAction: PageAction = {
     key: 'delete',
     label: t('delete'),
+    hotkey: DELETE_HOTKEY,
     danger: true,
     disabled: dirty,
     title: dirty ? t('saveFirst') : undefined,

@@ -1,0 +1,41 @@
+.grid {
+  outline: none;
+}
+
+.grid td {
+  white-space: nowrap;
+  max-width: 360px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  cursor: default;
+}
+
+/* The row the cursor is on: a light tint, stronger while the grid has the focus. */
+.grid tr[data-active] td {
+  background-color: var(--mantine-primary-color-light);
+}
+
+.grid:focus-visible tr[data-active] td,
+.grid:focus tr[data-active] td {
+  background-color: var(--mantine-color-forest-1);
+}
+
+[data-mantine-color-scheme='dark'] .grid:focus tr[data-active] td {
+  background-color: var(--mantine-color-forest-9);
+}
+
+/* The cell the cursor is on, only while the grid has the focus. */
+.grid:focus td[data-active] {
+  outline: 2px solid var(--mantine-primary-color-filled);
+  outline-offset: -2px;
+}
+
+/* The first column opens the row: drawn as a link. */
+.opens {
+  color: var(--mantine-color-anchor);
+  cursor: pointer !important;
+}
+
+.opens:hover {
+  text-decoration: underline;
+}

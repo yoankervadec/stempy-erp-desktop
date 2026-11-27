@@ -1,6 +1,7 @@
 import { Anchor, Box, Button, Divider, Group, Text } from '@mantine/core'
 import { Fragment, type ReactNode } from 'react'
 import type { Command } from '../platform/commands'
+import { formatHotkey } from '../platform/hotkeys'
 import { CommandLayer } from './CommandBar'
 import classes from './Page.module.css'
 
@@ -16,8 +17,8 @@ export interface PageAction {
   /** Shown on hover, e.g. why the action is disabled. */
   title?: string
   loading?: boolean
-  /** The key that runs it, as shown in the command bar (e.g. "Ctrl+N"). */
-  shortcut?: string
+  /** The key that runs it, in Mantine's notation ("mod+n", "f5"); shown on hover. */
+  hotkey?: string
   /** The page's main action (Save): drawn filled. Others are flat. */
   primary?: boolean
   danger?: boolean
@@ -33,7 +34,10 @@ export function ActionButton({ action }: { action: PageAction }): React.JSX.Elem
       color={action.danger ? 'red' : action.primary ? undefined : 'dark'}
       disabled={action.disabled}
       loading={action.loading}
-      title={action.title}
+      title={
+        [action.title, action.hotkey && formatHotkey(action.hotkey)].filter(Boolean).join(' - ') ||
+        undefined
+      }
       onClick={action.onClick}
       className={action.primary ? undefined : classes.flat}
     >

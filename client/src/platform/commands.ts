@@ -6,8 +6,8 @@ export interface Command {
   label: string
   /** Shown after the label, dimmed: the module of a page, for instance. */
   hint?: string
-  /** The key that runs it, as shown to the user (e.g. "Ctrl+N"). */
-  shortcut?: string
+  /** The key that runs it, in Mantine's notation ("mod+n", "shift+f3"). */
+  hotkey?: string
   disabled?: boolean
   run: () => void
 }

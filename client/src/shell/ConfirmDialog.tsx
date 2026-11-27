@@ -1,3 +1,4 @@
+import { CommandLayer } from './CommandBar'
 import { Button, Group, Modal, Text } from '@mantine/core'
 import type { ReactNode } from 'react'
 import { useText } from '../platform/useText'
@@ -25,6 +26,8 @@ export function ConfirmDialog({
   const t = useText()
   return (
     <Modal opened={opened} onClose={onCancel} title={title} centered size="sm">
+      {/* No page shortcut may act under this question. */}
+      {opened && <CommandLayer actions={[]} level="modal" />}
       {typeof children === 'string' ? <Text size="sm">{children}</Text> : children}
       <Group justify="flex-end" mt="lg">
         <Button variant="default" onClick={onCancel} disabled={loading}>

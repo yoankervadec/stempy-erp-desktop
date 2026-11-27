@@ -74,7 +74,7 @@ export function ChildList({
         table={table}
         loading={list.isFetching}
         emptyText={t('noRows')}
-        onRowClick={(r) =>
+        onRowOpen={(r) =>
           navigate({
             to: '/r/$resourceKey/$recordId',
             params: { resourceKey: child.key, recordId: r.id }

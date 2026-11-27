@@ -138,6 +138,7 @@ const TEXTS = {
   noFilters: { fr: 'Aucun filtre', en: 'No filters' },
   showFilters: { fr: 'Afficher les filtres', en: 'Show filters' },
   hideFilters: { fr: 'Masquer les filtres', en: 'Hide filters' },
+  filterOnValue: { fr: 'Filtrer sur cette valeur', en: 'Filter on this value' },
   clearFilters: { fr: 'Tout effacer', en: 'Clear all' },
   apply: { fr: 'Appliquer', en: 'Apply' },
   field: { fr: 'Champ', en: 'Field' },

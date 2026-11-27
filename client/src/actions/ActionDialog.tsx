@@ -1,3 +1,4 @@
+import { CommandLayer } from '../shell/CommandBar'
 import { Alert, Button, Group, Modal, Stack, Text } from '@mantine/core'
 import { useState } from 'react'
 import { ApiError } from '../api/client'
@@ -67,6 +68,8 @@ export function ActionDialog({
 
   return (
     <Modal opened onClose={onClose} title={action.label} centered size="md">
+      {/* No page shortcut may act under this dialog. */}
+      <CommandLayer actions={[]} level="modal" />
       <form
         onSubmit={(e) => {
           e.preventDefault()

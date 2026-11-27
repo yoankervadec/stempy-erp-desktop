@@ -14,7 +14,7 @@ import { ActionDialog, type ActionResult } from '../actions/ActionDialog'
 import { queryList, sortOrDefault } from '../api/query'
 import type { Id, MetaAction, MetaField, MetaResource, QuerySpec, Row } from '../api/types'
 import { RecordModal } from '../record/RecordModal'
-import { DataGrid } from '../grid/DataGrid'
+import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
@@ -22,7 +22,14 @@ import { ErrorAlert } from '../shell/ErrorAlert'
 import { Page, type ActionGroups } from '../shell/Page'
 import { FilterPane } from './FilterPane'
 import classes from './ListScreen.module.css'
-import { filterableFields, toWhere, type AppliedFilter } from './filters'
+import {
+  filterableFields,
+  filterChoices,
+  MAX_FILTERS,
+  toWhere,
+  type AppliedFilter,
+  type FilterChoice
+} from './filters'
 
 const PAGE_SIZES = ['25', '50', '100', '200']
 const MAX_SORT_KEYS = 3
@@ -81,6 +88,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
     defaultValue: true
   })
   const canFilter = filterableFields(resource).length > 0
+  const [activeCell, setActiveCell] = useState<ActiveCell<Row> | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [search] = useDebouncedValue(searchInput.trim(), 300)
   const [limit, setLimit] = useState(50)
@@ -162,8 +170,41 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const page = list.data?.page
   const hasMore = page?.hasMore ?? false
 
+  // Alt+F3, as in NAV: filter the list on the value of the cell the cursor is on. It
+  // replaces a filter already on that field.
+  const cellFilter = ((): AppliedFilter[] | null => {
+    if (!activeCell) return null
+    const field = filterableFields(resource).find((f) => f.name === activeCell.columnId)
+    if (!field) return null
+    const value = activeCell.row.original[field.name]
+    const choices = filterChoices(field)
+    const choice: FilterChoice | null =
+      value == null
+        ? choices.includes('isEmpty')
+          ? 'isEmpty'
+          : null
+        : choices.includes('equals')
+          ? 'equals'
+          : null
+    if (!choice) return null
+    const others = filters.filter((f) => f.field !== field.name)
+    if (others.length >= MAX_FILTERS) return null
+    return [
+      ...others,
+      {
+        id: `cell:${field.name}`,
+        field: field.name,
+        choice,
+        value: value ?? undefined,
+        display: value == null ? '' : formatValue(field, value, activeCell.row.original, language)
+      }
+    ]
+  })()
+
   const actions: ActionGroups = [
-    resource.can.create ? [{ key: 'new', label: t('new'), onClick: () => open(null) }] : [],
+    resource.can.create
+      ? [{ key: 'new', label: t('new'), hotkey: 'mod+n', onClick: () => open(null) }]
+      : [],
     // The resource's own actions, as /meta names them.
     listActions.map((a) => ({
       key: `action:${a.name}`,
@@ -174,6 +215,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
       {
         key: 'refresh',
         label: t('refresh'),
+        hotkey: 'f5',
         loading: list.isFetching,
         onClick: () => void list.refetch()
       }
@@ -233,7 +275,15 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
               {
                 id: 'filters',
                 label: paneOpen ? t('hideFilters') : t('showFilters'),
+                hotkey: 'shift+f3',
                 run: () => setPaneOpen((o) => !o)
+              },
+              {
+                id: 'filterOnCell',
+                label: t('filterOnValue'),
+                hotkey: 'alt+f3',
+                disabled: !cellFilter,
+                run: () => cellFilter && setFilters(cellFilter)
               }
             ]
           : []
@@ -256,7 +306,8 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
           loading={list.isFetching}
           emptyText={t('noRows')}
           sortHint={t('sortHint')}
-          onRowClick={(row) => open(row.original[resource.idField] as Id)}
+          onRowOpen={(row) => open(row.original[resource.idField] as Id)}
+          onActiveCellChange={setActiveCell}
         />
 
         <Group justify="space-between">
