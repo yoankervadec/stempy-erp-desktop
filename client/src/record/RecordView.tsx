@@ -35,6 +35,7 @@ import { formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
+import type { ActionGroups, PageAction } from '../shell/Page'
 import { ErrorAlert } from '../shell/ErrorAlert'
 import { ChildList } from './ChildList'
 import { CollectionGrid } from './CollectionGrid'
@@ -62,10 +63,11 @@ export interface RecordViewProps {
   onClose: () => void
   /** Told when the form has unsaved changes, so closing can ask first. */
   onDirtyChange?: (dirty: boolean) => void
-  /** Where the buttons go: the modal's footer or the page's header. */
+  /** Where the actions go: the modal's footer or the page's header. */
   renderFrame: (parts: {
-    title: ReactNode
-    buttons: ReactNode
+    title: string
+    badge?: ReactNode
+    actions: ActionGroups
     body: ReactNode
   }) => React.JSX.Element
 }
@@ -83,14 +85,14 @@ export function RecordView(props: RecordViewProps): React.JSX.Element {
   if (record.isError) {
     return props.renderFrame({
       title: resource.labelOne,
-      buttons: null,
+      actions: [],
       body: <ErrorAlert error={record.error} onRetry={() => record.refetch()} />
     })
   }
   if (!record.data) {
     return props.renderFrame({
       title: resource.labelOne,
-      buttons: null,
+      actions: [],
       body: (
         <Center py="xl">
           <Loader />
@@ -269,16 +271,18 @@ function RecordEditor({
   }
 
   // Documents: live totals from the server while the user edits (nothing saved).
-  const calculable = inline.length > 0 && editableLines
+  // Only documents with editable lines are calculated. Worked out inside the memo, from
+  // its own inputs: a flag from outside makes the React Compiler give up on this component.
   const draft = useMemo(() => {
-    if (!calculable) return null
+    const lines = inlineCollections(resource)
+    if (!lines.some((c) => canEditCollection(base, c))) return null
     return creating ? createBody(resource, base, values) : patchBody(resource, base, values).body
-  }, [calculable, creating, resource, base, values])
+  }, [creating, resource, base, values])
   const [debouncedDraft] = useDebouncedValue(draft, 400)
   const calc = useQuery<CalculateResponse>({
     queryKey: ['calculate', resource.key, id ?? 'new', debouncedDraft],
     queryFn: () => calculateRecord(resource, id, debouncedDraft!),
-    enabled: calculable && debouncedDraft != null && dirty,
+    enabled: debouncedDraft != null && dirty,
     placeholderData: (prev) => prev,
     retry: false,
     staleTime: Infinity
@@ -302,58 +306,42 @@ function RecordEditor({
     form.getFieldState(path, form.formState).error?.message
 
   const titleText = creating ? '' : recordTitle(resource, base, language)
-  const title = (
-    <Group gap="xs" wrap="nowrap">
-      <Text fw={700} size="lg">
-        {resource.labelOne}
-        {titleText && ` ${titleText}`}
-      </Text>
-      {creating && <Badge variant="light">{t('creating')}</Badge>}
-    </Group>
-  )
+  const title = titleText ? `${resource.labelOne} ${titleText}` : resource.labelOne
+  const badge = creating ? <Badge>{t('creating')}</Badge> : undefined
 
-  const buttons = (
-    <Group gap="xs">
-      {recordActions.map((a) => (
-        <Button
-          key={a.action.name}
-          variant="default"
-          size="xs"
-          disabled={dirty}
-          title={dirty ? t('saveFirst') : undefined}
-          onClick={() => setAction(a)}
-        >
-          {a.action.label}
-        </Button>
-      ))}
-      {meta?.can.delete && (
-        <Button
-          variant="subtle"
-          color="red"
-          size="xs"
-          disabled={dirty}
-          onClick={() => setConfirmDelete(true)}
-        >
-          {t('delete')}
-        </Button>
-      )}
-      {editable && dirty && !creating && (
-        <Button variant="default" size="xs" onClick={() => rebase(base)}>
-          {t('cancel')}
-        </Button>
-      )}
-      {editable && (
-        <Button
-          size="xs"
-          onClick={() => void save()}
-          loading={saving}
-          disabled={!creating && !dirty}
-        >
-          {t('save')}
-        </Button>
-      )}
-    </Group>
-  )
+  const saveAction: PageAction = {
+    key: 'save',
+    label: t('save'),
+    primary: true,
+    loading: saving,
+    disabled: !creating && !dirty,
+    onClick: () => void save()
+  }
+  const cancelAction: PageAction = {
+    key: 'cancel',
+    label: t('cancel'),
+    onClick: () => rebase(base)
+  }
+  const deleteAction: PageAction = {
+    key: 'delete',
+    label: t('delete'),
+    danger: true,
+    disabled: dirty,
+    title: dirty ? t('saveFirst') : undefined,
+    onClick: () => setConfirmDelete(true)
+  }
+  const actions: ActionGroups = [
+    editable ? (dirty && !creating ? [saveAction, cancelAction] : [saveAction]) : [],
+    meta?.can.delete ? [deleteAction] : [],
+    // The record's own actions, as /meta and _meta.actions name them.
+    recordActions.map((a) => ({
+      key: `action:${a.action.name}`,
+      label: a.action.label,
+      disabled: dirty,
+      title: dirty ? t('saveFirst') : undefined,
+      onClick: () => setAction(a)
+    }))
+  ]
 
   const summary = resource.layout.summary
     .map((name) => resource.fields.find((f) => f.name === name))
@@ -523,5 +511,5 @@ function RecordEditor({
     </>
   )
 
-  return renderFrame({ title, buttons, body })
+  return renderFrame({ title, badge, actions, body })
 }

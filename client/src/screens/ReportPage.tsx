@@ -1,7 +1,8 @@
-import { Alert, Stack, Text, Title } from '@mantine/core'
+import { Alert, Text } from '@mantine/core'
 import { useParams } from '@tanstack/react-router'
 import { useReport } from '../platform/meta'
 import { useText } from '../platform/useText'
+import { Page } from '../shell/Page'
 
 /** One report. Placeholder until the generic report screen is built. */
 export function ReportPage(): React.JSX.Element {
@@ -10,9 +11,8 @@ export function ReportPage(): React.JSX.Element {
   const report = useReport(reportKey)
   if (!report) return <Alert color="gray">{t('notInMeta')}</Alert>
   return (
-    <Stack gap="xs">
-      <Title order={2}>{report.label}</Title>
+    <Page title={report.label}>
       <Text c="dimmed">{t('screenPending')}</Text>
-    </Stack>
+    </Page>
   )
 }

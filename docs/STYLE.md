@@ -34,27 +34,39 @@ there, not with inline styles on a screen.
   - striped rows
   - a gray header band
   - a hover row tinted with `forest-0`
-- **Buttons:** Mantine's filled variant is kept for the one primary action of a screen
-  (New, Save, Sign in). Every other button is `variant="default"`, a bordered push button.
+- **Buttons:**
+  - Page and modal commands go in the action bar (`shell/Page.tsx`, `PageAction` data,
+    not buttons), drawn flat.
+  - Only the one commit action (Save) is filled.
+  - Tools beside the bar and buttons inside forms are `variant="default"` bordered
+    push buttons.
 - **Color scheme:** light and dark both follow the OS. Light is the reference: check it
   first.
 
-## Layout (target; being built)
+## Layout
 
-- **App header:**
+- **App header:** a solid `forest-8` band, 36px high. It holds:
+  - the menu toggle
   - the app name
-  - a command bar in the center, like VS Code's or Business Central's "Tell me"
+  - the command bar in the center (step 4)
   - the company and user menus
-- **Left:** the navigation tree from `/meta.menu`, which can be collapsed.
-- **Page header**, one generic component on every list, record and report page:
-  - the title
-  - an action bar with the generic actions (New, Edit list, Delete, Refresh), shown
-    according to `can.*`
-  - then the resource's actions from `/meta`
+- **Left:** the navigation tree from `/meta.menu`. The toggle collapses it, and the
+  choice is kept in `localStorage` (`stempy.navOpen`).
+- **Page:** every signed-in screen renders `<Page>` (`client/src/shell/Page.tsx`), a
+  sticky gray header band. In order, it holds:
+  - an optional parent link (the breadcrumb)
+  - the title and an optional badge
+  - the action bar
+  - tools at the right end (search box, column chooser)
+- **Action bar:** groups of `PageAction`, separated by a vertical rule. The groups are,
+  in order:
+  - lists: New, then the resource's actions, then Refresh
+  - records: Save and Cancel, then Delete, then the record's actions
 
-  Domain actions always come from the server; the client never invents one.
+  Domain actions always come from `/meta`; the client never invents one. A modal record
+  shows the same bar at the top of the modal.
 
-- **Lists:** a collapsible filter pane on the left of the grid.
+- **Lists:** a collapsible filter pane on the left of the grid (step 3).
 
 ## Keyboard (target; inspired by NAV / Business Central)
 

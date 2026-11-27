@@ -1,4 +1,4 @@
-import { Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput, Title } from '@mantine/core'
+import { Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
@@ -19,6 +19,7 @@ import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { ErrorAlert } from '../shell/ErrorAlert'
+import { Page, type ActionGroups } from '../shell/Page'
 import { FilterBar } from './FilterBar'
 import { toWhere, type AppliedFilter } from './filters'
 
@@ -154,134 +155,131 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const page = list.data?.page
   const hasMore = page?.hasMore ?? false
 
-  return (
-    <Stack gap="sm">
-      <Group justify="space-between" wrap="nowrap">
-        <Title order={2}>{resource.label}</Title>
-        <Group gap="xs" wrap="nowrap">
-          {resource.searchable && (
-            <TextInput
-              placeholder={t('search')}
-              aria-label={t('search')}
-              size="xs"
-              w={240}
-              maxLength={100}
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.currentTarget.value)}
-            />
-          )}
-          <Menu closeOnItemClick={false} position="bottom-end">
-            <Menu.Target>
-              <Button variant="default" size="xs">
-                {t('columns')}
-              </Button>
-            </Menu.Target>
-            <Menu.Dropdown mah={400} style={{ overflowY: 'auto' }}>
-              {table.getAllLeafColumns().map((column) => (
-                <Menu.Item key={column.id} onClick={column.getToggleVisibilityHandler()}>
-                  <Checkbox
-                    size="xs"
-                    readOnly
-                    checked={column.getIsVisible()}
-                    label={String(column.columnDef.header)}
-                    styles={{ input: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
-                  />
-                </Menu.Item>
-              ))}
-            </Menu.Dropdown>
-          </Menu>
-          <Button
-            variant="default"
-            size="xs"
-            loading={list.isFetching}
-            onClick={() => list.refetch()}
-          >
-            {t('refresh')}
-          </Button>
-          {listActions.map((a) => (
-            <Button key={a.name} variant="default" size="xs" onClick={() => setAction(a)}>
-              {a.label}
-            </Button>
+  const actions: ActionGroups = [
+    resource.can.create ? [{ key: 'new', label: t('new'), onClick: () => open(null) }] : [],
+    // The resource's own actions, as /meta names them.
+    listActions.map((a) => ({
+      key: `action:${a.name}`,
+      label: a.label,
+      onClick: () => setAction(a)
+    })),
+    [
+      {
+        key: 'refresh',
+        label: t('refresh'),
+        loading: list.isFetching,
+        onClick: () => void list.refetch()
+      }
+    ]
+  ]
+
+  const tools = (
+    <>
+      {resource.searchable && (
+        <TextInput
+          placeholder={t('search')}
+          aria-label={t('search')}
+          w={220}
+          maxLength={100}
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.currentTarget.value)}
+        />
+      )}
+      <Menu closeOnItemClick={false} position="bottom-end">
+        <Menu.Target>
+          <Button variant="default">{t('columns')}</Button>
+        </Menu.Target>
+        <Menu.Dropdown mah={400} style={{ overflowY: 'auto' }}>
+          {table.getAllLeafColumns().map((column) => (
+            <Menu.Item key={column.id} onClick={column.getToggleVisibilityHandler()}>
+              <Checkbox
+                readOnly
+                checked={column.getIsVisible()}
+                label={String(column.columnDef.header)}
+                styles={{ input: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
+              />
+            </Menu.Item>
           ))}
-          {resource.can.create && (
-            <Button size="xs" onClick={() => open(null)}>
-              {t('new')}
-            </Button>
-          )}
-        </Group>
-      </Group>
+        </Menu.Dropdown>
+      </Menu>
+    </>
+  )
 
-      <FilterBar resource={resource} filters={filters} onChange={setFilters} />
+  return (
+    <Page title={resource.label} actions={actions} tools={tools}>
+      <Stack gap="sm">
+        <FilterBar resource={resource} filters={filters} onChange={setFilters} />
 
-      {list.isError && <ErrorAlert error={list.error} onRetry={() => list.refetch()} />}
+        {list.isError && <ErrorAlert error={list.error} onRetry={() => list.refetch()} />}
 
-      <DataGrid
-        table={table}
-        loading={list.isFetching}
-        emptyText={t('noRows')}
-        sortHint={t('sortHint')}
-        onRowClick={(row) => open(row.original[resource.idField] as Id)}
-      />
+        <DataGrid
+          table={table}
+          loading={list.isFetching}
+          emptyText={t('noRows')}
+          sortHint={t('sortHint')}
+          onRowClick={(row) => open(row.original[resource.idField] as Id)}
+        />
 
-      <Group justify="space-between">
-        <Text size="sm" c="dimmed">
-          {rows.length > 0 && t('rowsRange', { from: offset + 1, to: offset + rows.length })}
-        </Text>
-        <Group gap="xs">
+        <Group justify="space-between">
           <Text size="sm" c="dimmed">
-            {t('rowsPerPage')}
+            {rows.length > 0 && t('rowsRange', { from: offset + 1, to: offset + rows.length })}
           </Text>
-          <Select
-            size="xs"
-            w={80}
-            data={PAGE_SIZES}
-            value={String(limit)}
-            allowDeselect={false}
-            onChange={(v) => v && setLimit(Number(v))}
-            aria-label={t('rowsPerPage')}
-          />
-          <Button
-            variant="default"
-            size="xs"
-            disabled={offset === 0 || list.isFetching}
-            onClick={() => setOffset(Math.max(0, offset - limit))}
-          >
-            {t('previousPage')}
-          </Button>
-          <Button
-            variant="default"
-            size="xs"
-            disabled={!hasMore || list.isFetching}
-            onClick={() => setOffset(offset + limit)}
-          >
-            {t('nextPage')}
-          </Button>
+          <Group gap="xs">
+            <Text size="sm" c="dimmed">
+              {t('rowsPerPage')}
+            </Text>
+            <Select
+              size="xs"
+              w={80}
+              data={PAGE_SIZES}
+              value={String(limit)}
+              allowDeselect={false}
+              onChange={(v) => v && setLimit(Number(v))}
+              aria-label={t('rowsPerPage')}
+            />
+            <Button
+              variant="default"
+              size="xs"
+              disabled={offset === 0 || list.isFetching}
+              onClick={() => setOffset(Math.max(0, offset - limit))}
+            >
+              {t('previousPage')}
+            </Button>
+            <Button
+              variant="default"
+              size="xs"
+              disabled={!hasMore || list.isFetching}
+              onClick={() => setOffset(offset + limit)}
+            >
+              {t('nextPage')}
+            </Button>
+          </Group>
         </Group>
-      </Group>
 
-      {modal && (
-        <RecordModal
-          resource={resource}
-          id={modal.id}
-          onOpen={(id) => setModal({ id })}
-          onClose={() => setModal(null)}
-        />
-      )}
-      {action && (
-        <ActionDialog
-          action={action}
-          recordId={null}
-          confirmText={null}
-          onClose={() => setAction(null)}
-          onDone={(result: ActionResult) => {
-            setAction(null)
-            void list.refetch()
-            // An action that made a record (201 with its row) shows it.
-            const id = (result.body as Row | null)?.[resource.idField]
-            if (result.status === 201 && typeof id === 'number') open(id)
-          }}
-        />
-      )}
-    </Stack>
+        {modal && (
+          <RecordModal
+            resource={resource}
+            id={modal.id}
+            onOpen={(id) => setModal({ id })}
+            onClose={() => setModal(null)}
+          />
+        )}
+        {action && (
+          <ActionDialog
+            action={action}
+            recordId={null}
+            confirmText={null}
+            onClose={() => setAction(null)}
+            onDone={(result: ActionResult) => {
+              setAction(null)
+              void list.refetch()
+              // An action that made a record (201 with its row) shows it.
+              const id = (result.body as Row | null)?.[resource.idField]
+              if (result.status === 201 && typeof id === 'number') open(id)
+            }}
+          />
+        )}
+      </Stack>
+    </Page>
   )
 }

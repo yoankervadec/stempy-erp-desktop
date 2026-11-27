@@ -1,0 +1,46 @@
+/* The application bar: a solid band of the accent color, white text. */
+.header {
+  background-color: var(--mantine-color-forest-8);
+  border-bottom: 1px solid var(--mantine-color-forest-9);
+  color: var(--mantine-color-white);
+}
+
+.appName {
+  color: inherit;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 0 4px;
+}
+
+.headerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  color: inherit;
+}
+
+.headerIcon:hover,
+.headerButton:hover {
+  background-color: var(--mantine-color-forest-7);
+}
+
+.headerButton {
+  color: var(--mantine-color-white);
+  font-weight: 500;
+}
+
+.headerText {
+  color: inherit;
+  padding: 0 8px;
+}
+
+.navbar {
+  padding: 4px;
+}
+
+/* Module headings in the menu: bold, so the tree reads at a glance. */
+.group > :global(.mantine-NavLink-body) > :global(.mantine-NavLink-label) {
+  font-weight: 600;
+}

@@ -1,10 +1,11 @@
-import { Alert, Anchor, Group, Stack } from '@mantine/core'
+import { Alert } from '@mantine/core'
 import { useBlocker, useNavigate, useParams } from '@tanstack/react-router'
 import { useCallback, useRef } from 'react'
 import { useResource } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { RecordView } from '../record/RecordView'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
+import { Page } from '../shell/Page'
 
 /**
  * A record on its own page: resources whose presentation is "page" (documents,
@@ -45,17 +46,15 @@ export function RecordPage(): React.JSX.Element {
           })
         }
         onClose={backToList}
-        renderFrame={({ title, buttons, body }) => (
-          <Stack gap="md">
-            <Anchor size="sm" onClick={backToList}>
-              {t('back')}: {resource.label}
-            </Anchor>
-            <Group justify="space-between" wrap="nowrap" align="flex-start">
-              {title}
-              {buttons}
-            </Group>
+        renderFrame={({ title, badge, actions, body }) => (
+          <Page
+            parent={{ label: resource.label, onClick: backToList }}
+            title={title}
+            badge={badge}
+            actions={actions}
+          >
             {body}
-          </Stack>
+          </Page>
         )}
       />
       <ConfirmDialog

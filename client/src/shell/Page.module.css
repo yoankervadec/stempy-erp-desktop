@@ -1,0 +1,34 @@
+.header {
+  position: sticky;
+  top: var(--app-shell-header-offset, 0);
+  z-index: 3;
+  padding: 8px 12px 6px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-gray-0);
+}
+
+:global([data-mantine-color-scheme='dark']) .header {
+  background-color: var(--mantine-color-dark-7);
+}
+
+.title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.body {
+  padding: 12px;
+}
+
+/* Flat action bar buttons: text until hovered, then a plain border. */
+.flat {
+  border: 1px solid transparent;
+  font-weight: 500;
+}
+
+.flat:hover:not(:disabled, [data-disabled]) {
+  border-color: var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+}

@@ -10,6 +10,7 @@ const TEXTS = {
   loading: { fr: 'Chargement...', en: 'Loading...' },
   retry: { fr: 'Réessayer', en: 'Retry' },
   close: { fr: 'Fermer', en: 'Close' },
+  toggleMenu: { fr: 'Afficher ou masquer le menu', en: 'Show or hide the menu' },
   signIn: { fr: 'Se connecter', en: 'Sign in' },
   signOut: { fr: 'Se déconnecter', en: 'Sign out' },
   userNo: { fr: "Code d'utilisateur", en: 'User number' },
