@@ -8,6 +8,7 @@ import {
   type SessionResult
 } from '../shared/bridge'
 import { checkRequest, send } from './http'
+import { clearLocalPreferences, readLocalPreferences, writeLocalPreference } from './preferences'
 
 /**
  * The signed-in session. The token stays here, in memory: it is never sent to
@@ -161,6 +162,18 @@ export function registerSessionIpc(isTrusted: (url: string) => boolean): void {
     return setLanguage(language)
   })
   handle(IPC.apiRequest, (request: unknown) => authorized(request as ApiRequest))
+
+  // Local preferences belong to the signed-in user: none without a session.
+  const userId = (): number => {
+    if (!session) throw new Error('Not signed in')
+    return session.info.user.id
+  }
+  handle(IPC.prefsRead, () => readLocalPreferences(userId()))
+  handle(IPC.prefsWrite, (key: unknown, value: unknown) => {
+    if (typeof key !== 'string') throw new Error('key must be a string')
+    return writeLocalPreference(userId(), key, value)
+  })
+  handle(IPC.prefsClear, () => clearLocalPreferences(userId()))
 }
 
 /**

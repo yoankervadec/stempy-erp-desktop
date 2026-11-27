@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import type { LanguageChoice } from '../../../src/shared/bridge'
 import { ApiError } from '../api/client'
 import { forgetMeta } from '../api/meta'
+import { closePreferences } from './preferences'
 import { queryClient } from './queryClient'
 import { SessionContext, type SessionState } from './session'
 
@@ -27,6 +28,7 @@ export function SessionProvider({ children }: { children: ReactNode }): React.JS
       })
     // Any 401: the main process has dropped the token; back to the sign-in form.
     const unsubscribe = window.stempy.session.onEnded(() => {
+      void closePreferences()
       clearCaches()
       setState({ status: 'signedOut' })
     })
@@ -45,6 +47,8 @@ export function SessionProvider({ children }: { children: ReactNode }): React.JS
   }, [])
 
   const logout = useCallback(async () => {
+    // Written while the session still lets them be.
+    await closePreferences()
     await window.stempy.session.logout()
     clearCaches()
     setState({ status: 'signedOut' })

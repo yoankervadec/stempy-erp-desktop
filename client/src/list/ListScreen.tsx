@@ -1,5 +1,5 @@
 import { Alert, Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
-import { useDebouncedValue, useLocalStorage } from '@mantine/hooks'
+import { useDebouncedValue } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   getCoreRowModel,
@@ -17,6 +17,7 @@ import { RecordModal } from '../record/RecordModal'
 import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
+import { isBoolean, usePreference } from '../platform/preferences'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
 import { ErrorAlert } from '../shell/ErrorAlert'
@@ -87,11 +88,8 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const [sorting, setSorting] = useState<SortingState>(() => initialSorting(resource))
   const [visibility, setVisibility] = useState<VisibilityState>(() => initialVisibility(resource))
   const [filters, setFilters] = useState<AppliedFilter[]>([])
-  // A layout preference, shared by every list: kept across sessions.
-  const [paneOpen, setPaneOpen] = useLocalStorage({
-    key: 'stempy.filterPaneOpen',
-    defaultValue: true
-  })
+  // Shared by every list.
+  const [paneOpen, setPaneOpen] = usePreference('list.filterPaneOpen', true, isBoolean)
   const canFilter = filterableFields(resource).length > 0
   const [activeCell, setActiveCell] = useState<ActiveCell<Row> | null>(null)
   const [searchInput, setSearchInput] = useState('')

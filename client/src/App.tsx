@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { fetchMeta } from './api/meta'
 import { SUPPORTED_API_VERSION } from './api/types'
 import { MetaContext } from './platform/meta'
+import { loadPreferences, PreferencesContext } from './platform/preferences'
 import { useSession, useSessionInfo } from './platform/session'
 import { router } from './router'
 import { CompanyPicker } from './shell/CompanyPicker'
@@ -23,21 +24,31 @@ function SignedIn(): React.JSX.Element {
     staleTime: Infinity,
     gcTime: Infinity
   })
+  // The user's own: read once per sign-in, kept across company switches.
+  const preferences = useQuery({
+    queryKey: ['preferences', info.user.id],
+    queryFn: () => loadPreferences(info.user.id),
+    staleTime: Infinity,
+    gcTime: Infinity
+  })
 
-  if (meta.isError) {
+  const failed = meta.isError ? meta : preferences.isError ? preferences : null
+  if (failed) {
     return (
       <Splash>
-        <ErrorAlert error={meta.error} onRetry={() => meta.refetch()} />
+        <ErrorAlert error={failed.error} onRetry={() => failed.refetch()} />
       </Splash>
     )
   }
-  if (!meta.data) return <Splash />
+  if (!meta.data || !preferences.data) return <Splash />
   if (meta.data.apiVersion > SUPPORTED_API_VERSION) {
     return <UpdateRequired serverVersion={meta.data.apiVersion} />
   }
   return (
     <MetaContext.Provider value={meta.data}>
-      <RouterProvider router={router} />
+      <PreferencesContext.Provider value={preferences.data}>
+        <RouterProvider router={router} />
+      </PreferencesContext.Provider>
     </MetaContext.Provider>
   )
 }

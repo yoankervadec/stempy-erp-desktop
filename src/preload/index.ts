@@ -20,6 +20,11 @@ const bridge: StempyBridge = {
   },
   api: {
     request: (request) => ipcRenderer.invoke(IPC.apiRequest, request)
+  },
+  localPreferences: {
+    read: () => ipcRenderer.invoke(IPC.prefsRead),
+    write: (key, value) => ipcRenderer.invoke(IPC.prefsWrite, key, value),
+    clear: () => ipcRenderer.invoke(IPC.prefsClear)
   }
 }
 

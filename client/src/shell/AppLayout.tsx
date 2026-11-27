@@ -1,5 +1,5 @@
 import { AppShell, Button, Group, Menu, Text, UnstyledButton } from '@mantine/core'
-import { useClickOutside, useHotkeys, useLocalStorage } from '@mantine/hooks'
+import { useClickOutside, useHotkeys } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
@@ -7,6 +7,7 @@ import { CommandContext, CommandStore, type Command } from '../platform/commands
 import type { LanguageChoice } from '../../../src/shared/bridge'
 import { ApiError } from '../api/client'
 import { useMeta } from '../platform/meta'
+import { isBoolean, usePreference } from '../platform/preferences'
 import { useSession, useSessionInfo } from '../platform/session'
 import { useText } from '../platform/useText'
 import classes from './AppLayout.module.css'
@@ -210,8 +211,7 @@ function MenuIcon(): React.JSX.Element {
 export function AppLayout(): React.JSX.Element {
   const t = useText()
   const navigate = useNavigate()
-  // A layout preference, not a secret: kept across sessions in localStorage.
-  const [pinned, setPinned] = useLocalStorage({ key: 'stempy.menuPinned', defaultValue: true })
+  const [pinned, setPinned] = usePreference('shell.menuPinned', true, isBoolean)
   // Unpinned, the bar shows over the page until a page is chosen or the user looks away.
   const [shown, setShown] = useState(false)
   const header = useClickOutside(() => setShown(false))

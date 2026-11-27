@@ -62,6 +62,17 @@ export interface SessionResult {
   session: SessionInfo | null
 }
 
+/** A user's preferences by key: plain JSON values the client alone reads (docs/PREFERENCES_API.md). */
+export type PreferenceItems = Record<string, unknown>
+
+/** Keys: letters, digits and . _ : - @, up to 100 characters. */
+export function isPreferenceKey(key: unknown): key is string {
+  return typeof key === 'string' && /^[A-Za-z0-9._:@-]{1,100}$/.test(key)
+}
+
+/** A preference's value, as JSON, may not be longer. */
+export const MAX_PREFERENCE_BYTES = 64 * 1024
+
 /** What the preload script exposes as `window.stempy`. */
 export interface StempyBridge {
   session: {
@@ -79,6 +90,17 @@ export interface StempyBridge {
   api: {
     request(request: ApiRequest): Promise<ApiResponse>
   }
+  /**
+   * The signed-in user's preferences kept on this machine, while the server does
+   * not store them (its GET /auth/me/preferences answers 404).
+   */
+  localPreferences: {
+    read(): Promise<PreferenceItems>
+    /** Sets one key; undefined removes it. */
+    write(key: string, value: unknown): Promise<void>
+    /** Drops them all, once they are on the server. */
+    clear(): Promise<void>
+  }
 }
 
 /** IPC channel names. */
@@ -89,5 +111,8 @@ export const IPC = {
   sessionSetCompany: 'stempy:session:setCompany',
   sessionSetLanguage: 'stempy:session:setLanguage',
   sessionEnded: 'stempy:session:ended',
-  apiRequest: 'stempy:api:request'
+  apiRequest: 'stempy:api:request',
+  prefsRead: 'stempy:prefs:read',
+  prefsWrite: 'stempy:prefs:write',
+  prefsClear: 'stempy:prefs:clear'
 } as const

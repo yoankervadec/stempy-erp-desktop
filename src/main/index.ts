@@ -4,6 +4,7 @@ import { pathToFileURL } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { chromeLanguage, registerSessionIpc } from './session'
+import { initialWindowBounds, trackWindowState } from './windowState'
 
 /** Production: the renderer is served from app://stempy, a stable origin with a strict CSP. */
 const APP_SCHEME = 'app'
@@ -64,8 +65,7 @@ function serveRenderer(): void {
 
 function createWindow(): void {
   const mainWindow = new BrowserWindow({
-    width: 1280,
-    height: 800,
+    ...initialWindowBounds(),
     minWidth: 900,
     minHeight: 600,
     show: false,
@@ -81,6 +81,7 @@ function createWindow(): void {
     }
   })
 
+  trackWindowState(mainWindow)
   mainWindow.on('ready-to-show', () => mainWindow.show())
 
   // Links to the outside open in the system browser; nothing opens inside the app.
