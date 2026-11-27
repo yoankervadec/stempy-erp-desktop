@@ -1,4 +1,4 @@
-appId: com.electron.app
+appId: com.lesconstructionssapete.stempyerpdesktop
 productName: com.lesconstructionssapete.stempyerpdesktop
 directories:
   buildResources: build
@@ -10,6 +10,7 @@ files:
   - '!{.eslintcache,eslint.config.mjs,.prettierignore,.prettierrc.yaml,dev-app-update.yml,CHANGELOG.md,README.md}'
   - '!{.env,.env.*,.npmrc,pnpm-lock.yaml}'
   - '!{tsconfig.json,tsconfig.node.json,tsconfig.web.json}'
+afterPack: build/unique-uuid.cjs
 asarUnpack:
   - resources/**
 win:
@@ -26,6 +27,7 @@ mac:
     - NSMicrophoneUsageDescription: Application requests access to the device's microphone.
     - NSDocumentsFolderUsageDescription: Application requests access to the user's Documents folder.
     - NSDownloadsFolderUsageDescription: Application requests access to the user's Downloads folder.
+    - NSLocalNetworkUsageDescription: Stempy connects to the Stempy ERP server on your local network.
   notarize: false
 dmg:
   artifactName: ${name}-${version}.${ext}

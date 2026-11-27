@@ -1,9 +1,9 @@
-import { app, shell, BrowserWindow, net, protocol } from 'electron'
+import { app, dialog, shell, BrowserWindow, net, protocol } from 'electron'
 import { join, normalize, relative, isAbsolute } from 'path'
 import { pathToFileURL } from 'url'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
-import { registerSessionIpc } from './session'
+import { chromeLanguage, registerSessionIpc } from './session'
 
 /** Production: the renderer is served from app://stempy, a stable origin with a strict CSP. */
 const APP_SCHEME = 'app'
@@ -87,6 +87,20 @@ function createWindow(): void {
   mainWindow.webContents.setWindowOpenHandler((details) => {
     if (/^https?:\/\//.test(details.url)) shell.openExternal(details.url)
     return { action: 'deny' }
+  })
+  // The renderer refuses to unload while there are unsaved changes (its route
+  // blockers). Electron would then silently refuse to close or quit: ask instead.
+  mainWindow.webContents.on('will-prevent-unload', (event) => {
+    const fr = chromeLanguage() === 'fr'
+    const choice = dialog.showMessageBoxSync(mainWindow, {
+      type: 'question',
+      buttons: fr ? ['Quitter', 'Rester'] : ['Leave', 'Stay'],
+      defaultId: 1,
+      cancelId: 1,
+      message: fr ? 'Des modifications ne sont pas enregistrées.' : 'There are unsaved changes.',
+      detail: fr ? 'Quitter sans les enregistrer?' : 'Leave without saving them?'
+    })
+    if (choice === 0) event.preventDefault()
   })
   mainWindow.webContents.on('will-navigate', (event, url) => {
     if (!isTrustedUrl(url)) event.preventDefault()

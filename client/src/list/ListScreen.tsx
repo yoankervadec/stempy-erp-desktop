@@ -158,6 +158,8 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
 
   const blocker = useBlocker({
     shouldBlockFn: () => editorRef.current.dirty,
+    // Default true: refuse every unload (closing the window, quitting), changes or not.
+    enableBeforeUnload: () => editorRef.current.dirty,
     withResolver: true
   })
 

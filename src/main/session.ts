@@ -162,3 +162,13 @@ export function registerSessionIpc(isTrusted: (url: string) => boolean): void {
   })
   handle(IPC.apiRequest, (request: unknown) => authorized(request as ApiRequest))
 }
+
+/**
+ * The language for the main process's own dialogs: the user's choice, else the
+ * OS's. (A null choice means the company's default, which only /meta knows.)
+ */
+export function chromeLanguage(): 'fr' | 'en' {
+  const choice = session?.info.user.language
+  if (choice) return choice
+  return app.getPreferredSystemLanguages()[0]?.startsWith('en') ? 'en' : 'fr'
+}

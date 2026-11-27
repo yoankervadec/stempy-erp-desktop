@@ -20,7 +20,12 @@ export function RecordPage(): React.JSX.Element {
   const onDirtyChange = useCallback((d: boolean) => {
     dirty.current = d
   }, [])
-  const blocker = useBlocker({ shouldBlockFn: () => dirty.current, withResolver: true })
+  const blocker = useBlocker({
+    shouldBlockFn: () => dirty.current,
+    // Default true: refuse every unload (closing the window, quitting), changes or not.
+    enableBeforeUnload: () => dirty.current,
+    withResolver: true
+  })
 
   const id = recordId === 'new' ? null : /^\d+$/.test(recordId) ? Number(recordId) : undefined
   if (!resource || id === undefined || (id === null && !resource.can.create)) {
