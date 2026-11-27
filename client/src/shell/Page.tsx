@@ -65,6 +65,11 @@ export interface PageProps {
   actions?: ActionGroups
   /** Right end of the action bar: search box, column chooser. */
   tools?: ReactNode
+  /**
+   * The body lays out its own columns (a list's filter pane beside its grid): no
+   * padding, a row that fills the window's height.
+   */
+  flush?: boolean
   children: ReactNode
 }
 
@@ -78,11 +83,12 @@ export function Page({
   parent,
   actions,
   tools,
+  flush,
   children
 }: PageProps): React.JSX.Element {
   const bar = actions && <ActionBar groups={actions} />
   return (
-    <>
+    <div className={classes.page}>
       <Box className={classes.header}>
         {parent && (
           <Text size="xs" c="dimmed" mb={2}>
@@ -108,7 +114,7 @@ export function Page({
           </Group>
         )}
       </Box>
-      <Box className={classes.body}>{children}</Box>
-    </>
+      <Box className={flush ? classes.flushBody : classes.body}>{children}</Box>
+    </div>
   )
 }

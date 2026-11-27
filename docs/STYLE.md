@@ -66,7 +66,14 @@ there, not with inline styles on a screen.
   Domain actions always come from `/meta`; the client never invents one. A modal record
   shows the same bar at the top of the modal.
 
-- **Lists:** a collapsible filter pane on the left of the grid (step 3).
+- **Lists:** a filter pane, 260px wide, on the left of the grid (`list/FilterPane.tsx`).
+  - It shows the applied conditions one per row (field, then operator and value), each
+    with a remove button.
+  - An "Add filter" form opens inline in the pane.
+  - "Clear all" appears from two conditions up.
+  - The "Filters (n)" tool in the page header toggles the pane. Its state is shared by
+    all lists and kept in `localStorage` (`stempy.filterPaneOpen`).
+  - Filters stay applied while the pane is closed.
 
 ## Keyboard (target; inspired by NAV / Business Central)
 

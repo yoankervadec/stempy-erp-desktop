@@ -1,5 +1,5 @@
 import { Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
-import { useDebouncedValue } from '@mantine/hooks'
+import { useDebouncedValue, useLocalStorage } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
   getCoreRowModel,
@@ -20,8 +20,9 @@ import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { ErrorAlert } from '../shell/ErrorAlert'
 import { Page, type ActionGroups } from '../shell/Page'
-import { FilterBar } from './FilterBar'
-import { toWhere, type AppliedFilter } from './filters'
+import { FilterPane } from './FilterPane'
+import classes from './ListScreen.module.css'
+import { filterableFields, toWhere, type AppliedFilter } from './filters'
 
 const PAGE_SIZES = ['25', '50', '100', '200']
 const MAX_SORT_KEYS = 3
@@ -74,6 +75,12 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const [sorting, setSorting] = useState<SortingState>(() => initialSorting(resource))
   const [visibility, setVisibility] = useState<VisibilityState>(() => initialVisibility(resource))
   const [filters, setFilters] = useState<AppliedFilter[]>([])
+  // A layout preference, shared by every list: kept across sessions.
+  const [paneOpen, setPaneOpen] = useLocalStorage({
+    key: 'stempy.filterPaneOpen',
+    defaultValue: true
+  })
+  const canFilter = filterableFields(resource).length > 0
   const [searchInput, setSearchInput] = useState('')
   const [search] = useDebouncedValue(searchInput.trim(), 300)
   const [limit, setLimit] = useState(50)
@@ -175,6 +182,16 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
 
   const tools = (
     <>
+      {canFilter && (
+        <Button
+          variant={paneOpen ? 'light' : 'default'}
+          aria-pressed={paneOpen}
+          onClick={() => setPaneOpen((o) => !o)}
+        >
+          {t('filters')}
+          {filters.length > 0 && ` (${filters.length})`}
+        </Button>
+      )}
       {resource.searchable && (
         <TextInput
           placeholder={t('search')}
@@ -206,10 +223,16 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   )
 
   return (
-    <Page title={resource.label} actions={actions} tools={tools}>
-      <Stack gap="sm">
-        <FilterBar resource={resource} filters={filters} onChange={setFilters} />
-
+    <Page title={resource.label} actions={actions} tools={tools} flush>
+      {canFilter && paneOpen && (
+        <FilterPane
+          resource={resource}
+          filters={filters}
+          onChange={setFilters}
+          onClose={() => setPaneOpen(false)}
+        />
+      )}
+      <Stack gap="sm" className={classes.content}>
         {list.isError && <ErrorAlert error={list.error} onRetry={() => list.refetch()} />}
 
         <DataGrid

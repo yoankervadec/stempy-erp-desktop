@@ -1,0 +1,47 @@
+/* The pane: a fixed column on the left of the list, ruled off from the grid. */
+.pane {
+  flex: none;
+  width: 260px;
+  border-right: 1px solid var(--mantine-color-default-border);
+  background-color: var(--mantine-color-body);
+  padding-bottom: 8px;
+}
+
+.paneHeader {
+  padding: 4px 4px 4px 8px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+/* One condition per row: field over "operator value", a remove button at the end. */
+.filter {
+  display: flex;
+  align-items: flex-start;
+  gap: 4px;
+  padding: 4px 4px 4px 8px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.filterText {
+  flex: 1;
+  min-width: 0;
+}
+
+.form {
+  padding: 8px;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.link {
+  padding: 2px 4px;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-anchor);
+}
+
+.link:hover:not(:disabled) {
+  text-decoration: underline;
+}
+
+.link:disabled {
+  color: var(--mantine-color-dimmed);
+  cursor: default;
+}

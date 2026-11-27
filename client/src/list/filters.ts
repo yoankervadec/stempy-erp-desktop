@@ -1,4 +1,4 @@
-import type { FilterNode, MetaField, OperatorName } from '../api/types'
+import type { FilterNode, MetaField, MetaResource, OperatorName } from '../api/types'
 import type { TextKey } from '../platform/i18n'
 
 /** The server's limit on conditions in one QUERY (API_GUIDE section 6). */
@@ -31,6 +31,11 @@ export function filterChoices(field: MetaField): FilterChoice[] {
   }
   if (ops.includes('isNull')) out.push('isEmpty', 'isNotEmpty')
   return out
+}
+
+/** The fields a filter can be put on: the server marks them, and an operator must have an editor. */
+export function filterableFields(resource: MetaResource): MetaField[] {
+  return resource.fields.filter((f) => f.filterable && filterChoices(f).length > 0)
 }
 
 const CHOICE_LABELS: Record<FilterChoice, TextKey> = {

@@ -122,6 +122,8 @@ const TEXTS = {
   // Filters
   filters: { fr: 'Filtres', en: 'Filters' },
   addFilter: { fr: 'Ajouter un filtre', en: 'Add filter' },
+  removeFilter: { fr: 'Retirer ce filtre', en: 'Remove this filter' },
+  noFilters: { fr: 'Aucun filtre', en: 'No filters' },
   clearFilters: { fr: 'Tout effacer', en: 'Clear all' },
   apply: { fr: 'Appliquer', en: 'Apply' },
   field: { fr: 'Champ', en: 'Field' },

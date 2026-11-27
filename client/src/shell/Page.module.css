@@ -18,8 +18,21 @@
   line-height: 1.3;
 }
 
+/* The page fills the window below the app header, so a side pane can run to the bottom. */
+.page {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--app-shell-header-offset, 0px));
+}
+
 .body {
   padding: 12px;
+}
+
+.flushBody {
+  flex: 1;
+  display: flex;
+  min-height: 0;
 }
 
 /* Flat action bar buttons: text until hovered, then a plain border. */
