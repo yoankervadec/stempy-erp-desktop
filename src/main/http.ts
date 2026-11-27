@@ -33,6 +33,19 @@ function buildUrl(request: ApiRequest): string {
   return url.toString()
 }
 
+/**
+ * Why fetch failed. Its own message is a bare "fetch failed"; the cause has the
+ * reason, and a refused connection is an AggregateError with an empty message
+ * and only a code (ECONNREFUSED).
+ */
+function reason(e: unknown): string {
+  const cause = e instanceof Error && e.cause instanceof Error ? e.cause : e
+  if (!(cause instanceof Error)) return String(cause)
+  const code = (cause as Error & { code?: string }).code
+  if (e instanceof Error && e.name === 'TimeoutError') return 'timed out'
+  return cause.message || code || cause.name
+}
+
 /** One call to the server. Never throws for HTTP errors: the status says what happened. */
 export async function send(request: ApiRequest, server: ServerHeaders): Promise<ApiResponse> {
   checkRequest(request)
@@ -65,8 +78,8 @@ export async function send(request: ApiRequest, server: ServerHeaders): Promise<
       location: null,
       idempotentReplayed: false,
       body: null,
-      networkError:
-        e instanceof Error ? (e.cause instanceof Error ? e.cause.message : e.message) : String(e)
+      // Name the server tried, so "unreachable" says where (a wrong URL, a stopped server).
+      networkError: `${SERVER_URL}: ${reason(e)}`
     }
   }
 

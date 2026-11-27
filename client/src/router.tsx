@@ -5,6 +5,7 @@ import {
   createRouter
 } from '@tanstack/react-router'
 import { HomePage } from './screens/HomePage'
+import { RecordPage } from './screens/RecordPage'
 import { ReportPage } from './screens/ReportPage'
 import { ResourcePage } from './screens/ResourcePage'
 import { AppLayout } from './shell/AppLayout'
@@ -23,13 +24,20 @@ const resourceRoute = createRoute({
   component: ResourcePage
 })
 
+/** "new", or a stored record's id. */
+const recordRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/r/$resourceKey/$recordId',
+  component: RecordPage
+})
+
 const reportRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/reports/$reportKey',
   component: ReportPage
 })
 
-const routeTree = rootRoute.addChildren([homeRoute, resourceRoute, reportRoute])
+const routeTree = rootRoute.addChildren([homeRoute, resourceRoute, recordRoute, reportRoute])
 
 // Hash history: the renderer is one file (app://stempy/index.html), with no server-side routing.
 export const router = createRouter({ routeTree, history: createHashHistory() })

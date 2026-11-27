@@ -8,9 +8,12 @@ import {
   type SortingState,
   type VisibilityState
 } from '@tanstack/react-table'
+import { useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
+import { ActionDialog, type ActionResult } from '../actions/ActionDialog'
 import { queryList, sortOrDefault } from '../api/query'
-import type { MetaResource, QuerySpec, Row } from '../api/types'
+import type { Id, MetaAction, MetaField, MetaResource, QuerySpec, Row } from '../api/types'
+import { RecordModal } from '../record/RecordModal'
 import { DataGrid } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
@@ -29,6 +32,14 @@ function initialSorting(resource: MetaResource): SortingState {
     .map((s) => ({ id: s.field, desc: s.dir === 'desc' }))
 }
 
+/** The listColumns in the server's order, then every other field (hidden until chosen). */
+function columnOrder(resource: MetaResource): MetaField[] {
+  const first = resource.listColumns
+    .map((name) => resource.fields.find((f) => f.name === name))
+    .filter((f): f is MetaField => !!f)
+  return [...first, ...resource.fields.filter((f) => !first.includes(f))]
+}
+
 /** Columns shown first: the resource's listColumns; the others can be turned on. */
 function initialVisibility(resource: MetaResource): VisibilityState {
   const shown = new Set(resource.listColumns)
@@ -44,6 +55,20 @@ function initialVisibility(resource: MetaResource): VisibilityState {
 export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.Element {
   const t = useText()
   const language = useLanguage()
+  const navigate = useNavigate()
+
+  /** Modal resources open over the list; the others on their own page. */
+  const [modal, setModal] = useState<{ id: Id | null } | null>(null)
+  const [action, setAction] = useState<MetaAction | null>(null)
+  const listActions = resource.actions.filter((a) => a.scope === 'resource')
+  const open = (id: Id | null): void => {
+    if (resource.presentation === 'modal') setModal({ id })
+    else
+      void navigate({
+        to: '/r/$resourceKey/$recordId',
+        params: { resourceKey: resource.key, recordId: id == null ? 'new' : String(id) }
+      })
+  }
 
   const [sorting, setSorting] = useState<SortingState>(() => initialSorting(resource))
   const [visibility, setVisibility] = useState<VisibilityState>(() => initialVisibility(resource))
@@ -83,7 +108,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () =>
-      resource.fields.map((f) => ({
+      columnOrder(resource).map((f) => ({
         id: f.name,
         accessorFn: (row) => row[f.name],
         header: f.label,
@@ -173,6 +198,16 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
           >
             {t('refresh')}
           </Button>
+          {listActions.map((a) => (
+            <Button key={a.name} variant="default" size="xs" onClick={() => setAction(a)}>
+              {a.label}
+            </Button>
+          ))}
+          {resource.can.create && (
+            <Button size="xs" onClick={() => open(null)}>
+              {t('new')}
+            </Button>
+          )}
         </Group>
       </Group>
 
@@ -185,6 +220,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
         loading={list.isFetching}
         emptyText={t('noRows')}
         sortHint={t('sortHint')}
+        onRowClick={(row) => open(row.original[resource.idField] as Id)}
       />
 
       <Group justify="space-between">
@@ -222,6 +258,30 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
           </Button>
         </Group>
       </Group>
+
+      {modal && (
+        <RecordModal
+          resource={resource}
+          id={modal.id}
+          onOpen={(id) => setModal({ id })}
+          onClose={() => setModal(null)}
+        />
+      )}
+      {action && (
+        <ActionDialog
+          action={action}
+          recordId={null}
+          confirmText={null}
+          onClose={() => setAction(null)}
+          onDone={(result: ActionResult) => {
+            setAction(null)
+            void list.refetch()
+            // An action that made a record (201 with its row) shows it.
+            const id = (result.body as Row | null)?.[resource.idField]
+            if (result.status === 201 && typeof id === 'number') open(id)
+          }}
+        />
+      )}
     </Stack>
   )
 }

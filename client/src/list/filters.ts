@@ -60,6 +60,13 @@ export function choiceLabelKey(field: MetaField, choice: FilterChoice): TextKey 
   return (temporal && TEMPORAL_LABELS[choice]) || CHOICE_LABELS[choice]
 }
 
+/** The operator a new filter starts with: "contains" for text when offered, else the first. */
+export function defaultChoice(field: MetaField): FilterChoice | null {
+  const choices = filterChoices(field)
+  if (field.type === 'string' && choices.includes('contains')) return 'contains'
+  return choices[0] ?? null
+}
+
 /** Whether the choice needs a value from the user. */
 export function needsValue(choice: FilterChoice): boolean {
   return choice !== 'isEmpty' && choice !== 'isNotEmpty'

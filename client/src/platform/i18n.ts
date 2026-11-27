@@ -63,6 +63,61 @@ const TEXTS = {
     en: 'Click to sort, Shift+click to add a sort'
   },
 
+  // Records
+  new: { fr: 'Nouveau', en: 'New' },
+  creating: { fr: 'Création', en: 'New' },
+  save: { fr: 'Enregistrer', en: 'Save' },
+  saved: { fr: 'Enregistré', en: 'Saved' },
+  cancel: { fr: 'Annuler', en: 'Cancel' },
+  delete: { fr: 'Supprimer', en: 'Delete' },
+  deleted: { fr: 'Supprimé', en: 'Deleted' },
+  back: { fr: 'Retour', en: 'Back' },
+  details: { fr: 'Détails', en: 'Details' },
+  confirm: { fr: 'Confirmer', en: 'Confirm' },
+  deleteTitle: { fr: 'Supprimer cet enregistrement ?', en: 'Delete this record?' },
+  deleteBody: {
+    fr: '{name} sera supprimé.',
+    en: '{name} will be deleted.'
+  },
+  discardTitle: { fr: 'Abandonner les modifications ?', en: 'Discard your changes?' },
+  discardBody: {
+    fr: 'Les modifications non enregistrées seront perdues.',
+    en: 'Changes that were not saved will be lost.'
+  },
+  discard: { fr: 'Abandonner', en: 'Discard' },
+  keepEditing: { fr: 'Continuer', en: 'Keep editing' },
+  conflictTitle: {
+    fr: 'Modifié par quelqu’un d’autre',
+    en: 'Changed by someone else'
+  },
+  conflictBody: {
+    fr: 'Cet enregistrement a été modifié depuis que vous l’avez ouvert. Rechargez-le, ou gardez vos modifications pour les enregistrer par-dessus la nouvelle version.',
+    en: 'This record changed since you opened it. Reload it, or keep your changes to save them over the new version.'
+  },
+  reload: { fr: 'Recharger', en: 'Reload' },
+  keepMine: { fr: 'Garder mes modifications', en: 'Keep my changes' },
+  saveFirst: {
+    fr: 'Enregistrez ou annulez vos modifications d’abord',
+    en: 'Save or cancel your changes first'
+  },
+  warnings: { fr: 'Avertissements', en: 'Warnings' },
+  addLine: { fr: 'Ajouter une ligne', en: 'Add line' },
+  removeLine: { fr: 'Retirer la ligne', en: 'Remove line' },
+  moreRows: {
+    fr: 'Les {n} premières lignes sont affichées.',
+    en: 'The first {n} rows are shown.'
+  },
+
+  // History
+  history: { fr: 'Historique', en: 'History' },
+  loadMore: { fr: 'Afficher plus', en: 'Show more' },
+  noHistory: { fr: 'Aucun historique', en: 'No history' },
+  hiddenValue: { fr: '(masqué)', en: '(hidden)' },
+  emptyValue: { fr: '(vide)', en: '(empty)' },
+  linesAdded: { fr: '{n} ligne(s) ajoutée(s)', en: '{n} line(s) added' },
+  linesChanged: { fr: '{n} ligne(s) modifiée(s)', en: '{n} line(s) changed' },
+  linesRemoved: { fr: '{n} ligne(s) retirée(s)', en: '{n} line(s) removed' },
+
   // Filters
   filters: { fr: 'Filtres', en: 'Filters' },
   addFilter: { fr: 'Ajouter un filtre', en: 'Add filter' },

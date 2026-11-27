@@ -106,7 +106,7 @@ function Navigation(): React.JSX.Element {
             <NavLink
               key={key}
               label={label(key, meta.resources)}
-              active={pathname === `/r/${key}`}
+              active={pathname === `/r/${key}` || pathname.startsWith(`/r/${key}/`)}
               onClick={() => navigate({ to: '/r/$resourceKey', params: { resourceKey: key } })}
             />
           ))}

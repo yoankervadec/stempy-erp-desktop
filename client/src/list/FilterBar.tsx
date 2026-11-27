@@ -4,6 +4,7 @@ import type { MetaField, MetaResource } from '../api/types'
 import { useText } from '../platform/useText'
 import {
   choiceLabelKey,
+  defaultChoice,
   filterChoices,
   MAX_FILTERS,
   needsValue,
@@ -40,7 +41,7 @@ function AddFilterForm({
         onChange={(name) => {
           const f = fields.find((x) => x.name === name)
           setFieldName(name)
-          setChoice(f ? (filterChoices(f)[0] ?? null) : null)
+          setChoice(f ? defaultChoice(f) : null)
           setValue(null)
         }}
         comboboxProps={{ withinPortal: false }}
