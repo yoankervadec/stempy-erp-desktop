@@ -1,0 +1,56 @@
+/*
+ * Global rules that the Mantine theme object cannot express. See docs/STYLE.md.
+ * Imported after Mantine's styles, so a selector of equal weight wins.
+ */
+
+/* Nothing moves: no hover fades, no sliding indicators. Loaders keep their animation. */
+*,
+*::before,
+*::after {
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+/* Lower control heights, so a form or an action bar packs like NAV (Mantine's xs is 30px). */
+.mantine-Input-wrapper,
+.mantine-InputWrapper-root {
+  --input-height-xs: 26px;
+}
+
+.mantine-Button-root {
+  --button-height-xs: 26px;
+}
+
+.mantine-ActionIcon-root {
+  --ai-size-xs: 26px;
+}
+
+/* Grid headers: a flat gray band with a firm bottom rule. */
+.mantine-Table-th {
+  font-weight: 600;
+}
+
+[data-mantine-color-scheme='light'] .mantine-Table-th {
+  background-color: var(--mantine-color-gray-1);
+  border-bottom: 1px solid var(--mantine-color-gray-4);
+}
+
+[data-mantine-color-scheme='dark'] .mantine-Table-th {
+  background-color: var(--mantine-color-dark-6);
+  border-bottom: 1px solid var(--mantine-color-dark-3);
+}
+
+/* Hovered rows take a tint of the primary color, not a gray that fights the stripes. */
+[data-mantine-color-scheme='light'] .mantine-Table-table {
+  --table-hover-color: var(--mantine-color-forest-0);
+}
+
+/* Default buttons: a visible edge, like a classic push button. */
+[data-mantine-color-scheme='light'] .mantine-Button-root[data-variant='default'] {
+  border-color: var(--mantine-color-gray-5);
+}
+
+/* Menu entries: tight rows, like a classic navigation tree. */
+.mantine-NavLink-root {
+  padding-block: 3px;
+}

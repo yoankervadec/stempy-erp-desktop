@@ -44,7 +44,7 @@ export function FieldInput({
     label,
     'aria-label': field.label,
     error,
-    size: size ?? (compact ? 'xs' : 'sm'),
+    size: size ?? 'xs',
     required: !readOnly && field.required,
     onBlur
   }
@@ -83,7 +83,7 @@ export function FieldInput({
           onChange={(e) => onChange(e.currentTarget.checked)}
           onBlur={onBlur}
           error={error}
-          size={compact ? 'xs' : 'sm'}
+          size="xs"
           mt={compact ? 0 : 'lg'}
         />
       )

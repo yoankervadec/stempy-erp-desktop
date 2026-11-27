@@ -92,7 +92,7 @@ export function CollectionGrid({
         )}
       </Group>
       <Table.ScrollContainer minWidth={c.columns.length * 140}>
-        <Table withTableBorder withColumnBorders verticalSpacing={4}>
+        <Table>
           <Table.Thead>
             <Table.Tr>
               {c.columns.map((col) => (

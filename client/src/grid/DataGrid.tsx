@@ -91,9 +91,9 @@ export function DataGrid<T>({
   const columnCount = table.getVisibleLeafColumns().length
   return (
     <Box pos="relative">
-      <LoadingOverlay visible={!!loading} overlayProps={{ blur: 1 }} loaderProps={{ size: 'sm' }} />
+      <LoadingOverlay visible={!!loading} />
       <Table.ScrollContainer minWidth={columnCount * 120}>
-        <Table striped highlightOnHover={!!onRowClick} stickyHeader verticalSpacing={6}>
+        <Table highlightOnHover={!!onRowClick} stickyHeader>
           <Table.Thead>
             {table.getHeaderGroups().map((group) => (
               <Table.Tr key={group.id}>
