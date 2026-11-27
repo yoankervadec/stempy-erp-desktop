@@ -99,6 +99,13 @@ const TEXTS = {
   },
   discard: { fr: 'Abandonner', en: 'Discard' },
   keepEditing: { fr: 'Continuer', en: 'Keep editing' },
+  editList: { fr: 'Modifier la liste', en: 'Edit list' },
+  viewList: { fr: 'Afficher la liste', en: 'View list' },
+  discardChanges: { fr: 'Abandonner les modifications', en: 'Discard changes' },
+  rowsNotSaved: {
+    fr: 'Des lignes n’ont pas été enregistrées',
+    en: 'Some rows were not saved'
+  },
   conflictTitle: {
     fr: 'Modifié par quelqu’un d’autre',
     en: 'Changed by someone else'

@@ -137,3 +137,25 @@ The grid (`grid/DataGrid.tsx`) is one focusable element with a cell cursor:
 - `Enter` opens the row.
 - A click moves the cursor. A click in the first column (drawn as a link) or a double
   click opens the row.
+
+## Edit list
+
+As in NAV, the list's cells become inputs (`list/useListEditor.ts`, `list/ListCell.tsx`).
+
+- **Offered** only with `can.update`, and not on documents (they are written whole,
+  header and lines in one request).
+- **Editable cells:** fields with `writable.update`, minus the server-managed ones. A
+  list row has no `_meta`, so locks are not known here: the server refuses a locked
+  field, and its error lands on the cell.
+- **Saving:** each changed row is one `PATCH` with the version it was read at and only
+  its changed fields. A row is saved when the cursor leaves it, on Save (`Ctrl+S`), and
+  before going back to view mode. Leaving the page with unsaved rows asks first.
+- **Marks:** a bar at the start of a row marks it as changed (yellow), saving (gray) or
+  refused (red).
+- **Errors:** field errors put a red edge on the cell (the message is on hover). Every
+  refused row is listed above the grid with its messages. On `VERSION_CONFLICT`, that
+  row offers Reload or Keep my changes.
+- **Keys:**
+  - `Up` / `Down` and `Enter` move between rows; `Tab` moves between cells.
+  - Inside an open dropdown or a text area, the keys belong to the field.
+  - Rows don't open in edit mode.

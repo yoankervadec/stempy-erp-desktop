@@ -1,4 +1,4 @@
-import { Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
+import { Alert, Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
 import { useDebouncedValue, useLocalStorage } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import {
@@ -8,8 +8,8 @@ import {
   type SortingState,
   type VisibilityState
 } from '@tanstack/react-table'
-import { useNavigate } from '@tanstack/react-router'
-import { useMemo, useState } from 'react'
+import { useBlocker, useNavigate } from '@tanstack/react-router'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActionDialog, type ActionResult } from '../actions/ActionDialog'
 import { queryList, sortOrDefault } from '../api/query'
 import type { Id, MetaAction, MetaField, MetaResource, QuerySpec, Row } from '../api/types'
@@ -18,9 +18,12 @@ import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
+import { ConfirmDialog } from '../shell/ConfirmDialog'
 import { ErrorAlert } from '../shell/ErrorAlert'
 import { Page, type ActionGroups } from '../shell/Page'
 import { FilterPane } from './FilterPane'
+import { ListCell } from './ListCell'
+import { canEditInList, canEditList, ListEditorContext, useListEditor } from './useListEditor'
 import classes from './ListScreen.module.css'
 import {
   filterableFields,
@@ -32,6 +35,8 @@ import {
 } from './filters'
 
 const PAGE_SIZES = ['25', '50', '100', '200']
+/** One empty list for every render: a new [] each time would look like new rows. */
+const NO_ROWS: Row[] = []
 const MAX_SORT_KEYS = 3
 
 function initialSorting(resource: MetaResource): SortingState {
@@ -122,6 +127,44 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
     placeholderData: keepPreviousData
   })
 
+  const listRows = list.data?.data ?? NO_ROWS
+  const titleField = resource.fields.find((f) => f.name === resource.title)
+  const editor = useListEditor(resource, listRows, {
+    conflict: t('conflictTitle'),
+    rowLabel: (row) =>
+      (titleField && formatValue(titleField, row[titleField.name], row, language)) ||
+      String(row[resource.idField])
+  })
+  const editable = canEditList(resource) && resource.fields.some(canEditInList)
+  // What the grid shows: each row as last saved here, if newer than the list's copy.
+  const data = useMemo(() => listRows.map(editor.shown), [listRows, editor.shown])
+
+  // Read by callbacks that must keep their identity (the grid's, the router's blocker).
+  const editorRef = useRef(editor)
+  useEffect(() => {
+    editorRef.current = editor
+  })
+
+  // NAV: a changed row is saved when the cursor leaves it.
+  const lastRowKey = useRef<string | null>(null)
+  const onActiveCellChange = useCallback((cell: ActiveCell<Row> | null) => {
+    setActiveCell(cell)
+    const ed = editorRef.current
+    const key = cell ? ed.keyOf(cell.row.original) : null
+    const previous = lastRowKey.current
+    lastRowKey.current = key
+    if (ed.editing && previous && previous !== key) void ed.saveRow(previous)
+  }, [])
+
+  const blocker = useBlocker({
+    shouldBlockFn: () => editorRef.current.dirty,
+    withResolver: true
+  })
+
+  const leaveEditMode = async (): Promise<void> => {
+    if (await editor.saveAll()) editor.setEditing(false)
+  }
+
   const columns = useMemo<ColumnDef<Row>[]>(
     () =>
       columnOrder(resource).map((f) => ({
@@ -131,27 +174,16 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
         enableSorting: f.sortable,
         enableHiding: true,
         meta: { align: alignOf(f.type) },
-        cell: ({ row }) => {
-          const value = row.original[f.name]
-          const text = formatValue(f, value, row.original, language)
-          const deleted = f.type === 'reference' && row.original._refs?.[f.name]?.deleted
-          return deleted ? (
-            <Text span size="sm" td="line-through" c="dimmed">
-              {text}
-            </Text>
-          ) : (
-            text
-          )
-        }
+        cell: ({ row }) => <ListCell field={f} row={row.original} />
       })),
-    [resource, language]
+    [resource]
   )
 
   // TanStack Table returns a mutable instance the React Compiler can't memoize; it
   // re-renders correctly without memoization, so the compiler skipping this is fine.
   // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
-    data: list.data?.data ?? [],
+    data,
     columns,
     getRowId: (row, index) => String(row[resource.idField] ?? index),
     getCoreRowModel: getCoreRowModel(),
@@ -211,6 +243,37 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
       label: a.label,
       onClick: () => setAction(a)
     })),
+    editable
+      ? editor.editing
+        ? [
+            {
+              key: 'save',
+              label: t('save'),
+              hotkey: 'mod+s',
+              primary: true,
+              loading: editor.saving,
+              disabled: !editor.dirty,
+              onClick: () => void editor.saveAll()
+            },
+            ...(editor.dirty
+              ? [{ key: 'discard', label: t('discardChanges'), onClick: editor.discard }]
+              : []),
+            {
+              key: 'editList',
+              label: t('viewList'),
+              hotkey: 'mod+e',
+              onClick: () => void leaveEditMode()
+            }
+          ]
+        : [
+            {
+              key: 'editList',
+              label: t('editList'),
+              hotkey: 'mod+e',
+              onClick: () => editor.setEditing(true)
+            }
+          ]
+      : [],
     [
       {
         key: 'refresh',
@@ -301,14 +364,60 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
       <Stack gap="sm" className={classes.content}>
         {list.isError && <ErrorAlert error={list.error} onRetry={() => list.refetch()} />}
 
-        <DataGrid
-          table={table}
-          loading={list.isFetching}
-          emptyText={t('noRows')}
-          sortHint={t('sortHint')}
-          onRowOpen={(row) => open(row.original[resource.idField] as Id)}
-          onActiveCellChange={setActiveCell}
-        />
+        {editor.problems.length > 0 && (
+          <Alert color="red" title={t('rowsNotSaved')} p="xs">
+            <Stack gap={4}>
+              {editor.problems.map(([key, p]) => (
+                <Group key={key} gap="xs" wrap="nowrap" justify="space-between">
+                  <Text size="sm">
+                    <b>{p.title}</b>
+                    {' - '}
+                    {[
+                      ...Object.entries(p.fields).map(
+                        ([name, m]) =>
+                          `${resource.fields.find((f) => f.name === name)?.label ?? name}: ${m}`
+                      ),
+                      p.message
+                    ]
+                      .filter(Boolean)
+                      .join(' - ')}
+                  </Text>
+                  {editor.conflicts.some(([k]) => k === key) && (
+                    <Group gap="xs" wrap="nowrap">
+                      <Button variant="default" onClick={() => editor.reload(key)}>
+                        {t('reload')}
+                      </Button>
+                      <Button variant="default" onClick={() => editor.keepMine(key)}>
+                        {t('keepMine')}
+                      </Button>
+                    </Group>
+                  )}
+                </Group>
+              ))}
+            </Stack>
+          </Alert>
+        )}
+
+        <ListEditorContext.Provider value={editor}>
+          <DataGrid
+            table={table}
+            loading={list.isFetching}
+            emptyText={t('noRows')}
+            sortHint={t('sortHint')}
+            onRowOpen={(row) => open(row.original[resource.idField] as Id)}
+            onActiveCellChange={onActiveCellChange}
+            editing={editor.editing}
+            rowState={(row) =>
+              editor.isSaving(row.original)
+                ? 'saving'
+                : editor.problem(row.original)
+                  ? 'error'
+                  : editor.isDirty(row.original)
+                    ? 'dirty'
+                    : undefined
+            }
+          />
+        </ListEditorContext.Provider>
 
         <Group justify="space-between">
           <Text size="sm" c="dimmed">
@@ -369,6 +478,16 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
             }}
           />
         )}
+        <ConfirmDialog
+          opened={blocker.status === 'blocked'}
+          title={t('discardTitle')}
+          confirmLabel={t('discard')}
+          danger
+          onConfirm={() => blocker.proceed?.()}
+          onCancel={() => blocker.reset?.()}
+        >
+          {t('discardBody')}
+        </ConfirmDialog>
       </Stack>
     </Page>
   )

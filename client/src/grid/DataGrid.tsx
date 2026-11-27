@@ -88,6 +88,20 @@ export interface DataGridProps<T> {
   onRowOpen?: (row: TableRow<T>) => void
   /** Told when the cell the keyboard is on changes. */
   onActiveCellChange?: (cell: ActiveCell<T> | null) => void
+  /**
+   * Edit mode: cells hold inputs. Up / Down and Enter move between rows (not
+   * inside an open dropdown or a text area), Tab between cells, focus follows the
+   * cursor; rows are not opened.
+   */
+  editing?: boolean
+  /** How a row stands in edit mode, drawn at its start. */
+  rowState?: (row: TableRow<T>) => 'dirty' | 'saving' | 'error' | undefined
+}
+
+/** A field the user types in, where the arrows belong to the text or a dropdown. */
+function inField(target: EventTarget | null): HTMLElement | null {
+  const el = target as HTMLElement | null
+  return el && ['INPUT', 'TEXTAREA', 'SELECT'].includes(el.tagName) ? el : null
 }
 
 const PAGE = 10
@@ -103,9 +117,12 @@ export function DataGrid<T>({
   loading,
   emptyText,
   sortHint,
-  onRowOpen,
-  onActiveCellChange
+  onRowOpen: openRow,
+  onActiveCellChange,
+  editing,
+  rowState
 }: DataGridProps<T>): React.JSX.Element {
+  const onRowOpen = editing ? undefined : openRow
   const rows = table.getRowModel().rows
   const columns = table.getVisibleLeafColumns()
   const multiSort = table.getState().sorting.length > 1
@@ -136,7 +153,28 @@ export function DataGrid<T>({
       col: Math.max(0, Math.min(columns.length - 1, c))
     })
 
+  // Edit mode: the cursor's cell takes the focus, if the focus is in the grid already.
+  useEffect(() => {
+    const table = body.current?.closest('table')
+    if (!editing || !table || !table.contains(document.activeElement)) return
+    const cell = body.current?.querySelector<HTMLElement>(`[data-row="${row}"] [data-col="${col}"]`)
+    if (!cell || cell.contains(document.activeElement)) return
+    const input = cell.querySelector<HTMLElement>('input:not([type=hidden]), textarea, button')
+    ;(input ?? table).focus()
+  }, [editing, row, col])
+
   const onKeyDown = (e: React.KeyboardEvent): void => {
+    const field = inField(e.target)
+    if (field) {
+      if (!editing || e.altKey || e.metaKey || e.ctrlKey || e.shiftKey) return
+      // A dropdown open, or a multi-line text: the keys are the field's.
+      if (field.getAttribute('aria-expanded') === 'true' || field.tagName === 'TEXTAREA') return
+      const step = e.key === 'ArrowDown' || e.key === 'Enter' ? 1 : e.key === 'ArrowUp' ? -1 : 0
+      if (step === 0 || rows.length === 0) return
+      e.preventDefault()
+      move(row + step, col)
+      return
+    }
     if (e.altKey || e.metaKey || (e.ctrlKey && e.key !== 'Home' && e.key !== 'End')) return
     const keys: Record<string, () => void> = {
       ArrowDown: () => move(row + 1, col),
@@ -148,7 +186,7 @@ export function DataGrid<T>({
       // Home / End: the row's first or last cell; with Ctrl, the first or last row.
       Home: () => (e.ctrlKey ? move(0, col) : move(row, 0)),
       End: () => (e.ctrlKey ? move(rows.length - 1, col) : move(row, columns.length - 1)),
-      Enter: () => activeRow && onRowOpen?.(activeRow)
+      Enter: () => (editing ? move(row + 1, col) : activeRow && onRowOpen?.(activeRow))
     }
     const handler = keys[e.key]
     if (handler && rows.length > 0) {
@@ -164,6 +202,7 @@ export function DataGrid<T>({
         <Table
           stickyHeader
           className={classes.grid}
+          data-editing={editing || undefined}
           tabIndex={0}
           onKeyDown={onKeyDown}
           aria-rowcount={rows.length}
@@ -188,6 +227,7 @@ export function DataGrid<T>({
                 key={r.id}
                 data-row={ri}
                 data-active={ri === row || undefined}
+                data-state={editing ? rowState?.(r) : undefined}
                 onDoubleClick={onRowOpen ? () => onRowOpen(r) : undefined}
               >
                 {r.getVisibleCells().map((cell, ci) => {
@@ -199,6 +239,8 @@ export function DataGrid<T>({
                       data-active={(ri === row && ci === col) || undefined}
                       className={opens ? classes.opens : undefined}
                       onMouseDown={() => setCursor({ row: ri, col: ci })}
+                      // Tab into a cell's input moves the cursor there.
+                      onFocus={() => (ri !== row || ci !== col) && setCursor({ row: ri, col: ci })}
                       onClick={opens ? () => onRowOpen(r) : undefined}
                       style={{ textAlign: cell.column.columnDef.meta?.align ?? 'left' }}
                     >

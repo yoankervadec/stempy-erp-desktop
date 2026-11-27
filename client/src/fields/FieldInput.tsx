@@ -13,7 +13,8 @@ export interface FieldInputProps {
   onChange: (value: unknown) => void
   onBlur?: () => void
   readOnly?: boolean
-  error?: string
+  /** A message under the input, or true for a red edge only (grid cells). */
+  error?: string | boolean
   /** The row the value belongs to: its _refs name references and currencies. */
   row?: Row
   /** In a grid cell: no label, smaller. */
