@@ -2,7 +2,10 @@ import { Anchor, Box, Button, Divider, Group, Text } from '@mantine/core'
 import { Fragment, type ReactNode } from 'react'
 import type { Command } from '../platform/commands'
 import { formatHotkey } from '../platform/hotkeys'
+import { usePersonalMenu } from '../platform/menu'
+import { useText } from '../platform/useText'
 import { CommandLayer } from './CommandBar'
+import { FavouriteStar } from './CustomizeMenu'
 import classes from './Page.module.css'
 
 /**
@@ -75,6 +78,8 @@ export interface PageProps {
   tools?: ReactNode
   /** More commands for the command bar, beyond the action bar's. */
   commands?: Command[]
+  /** The menu page this is ("r:<resourceKey>"): a star beside the title makes it a favourite. */
+  favourite?: string
   /**
    * The body lays out its own columns (a list's filter pane beside its grid): no
    * padding, a row that fills the window's height.
@@ -94,10 +99,23 @@ export function Page({
   actions,
   tools,
   commands,
+  favourite,
   flush,
   children
 }: PageProps): React.JSX.Element {
+  const t = useText()
+  const menu = usePersonalMenu()
   const bar = actions && <ActionBar groups={actions} />
+  const favouriteCommand: Command[] =
+    favourite && menu.page(favourite)
+      ? [
+          {
+            id: 'favourite',
+            label: menu.isFavourite(favourite) ? t('removeFavourite') : t('addFavourite'),
+            run: () => menu.toggleFavourite(favourite)
+          }
+        ]
+      : []
   return (
     <div className={classes.page}>
       <Box className={classes.header}>
@@ -112,6 +130,7 @@ export function Page({
           <Text component="h1" className={classes.title}>
             {title}
           </Text>
+          {favourite && <FavouriteStar id={favourite} />}
           {badge}
         </Group>
         {(bar || tools) && (
@@ -126,7 +145,7 @@ export function Page({
         )}
       </Box>
       <Box className={flush ? classes.flushBody : classes.body}>{children}</Box>
-      <CommandLayer actions={actions ?? []} extra={commands} />
+      <CommandLayer actions={actions ?? []} extra={[...(commands ?? []), ...favouriteCommand]} />
     </div>
   )
 }

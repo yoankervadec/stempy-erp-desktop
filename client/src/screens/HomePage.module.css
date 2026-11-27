@@ -1,0 +1,29 @@
+.sectionTitle {
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+/* Square tiles, NAV's role-centre cues: bordered, no shadow, a hover tint. */
+.favourites {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 6px;
+}
+
+.favourite {
+  display: block;
+  padding: 8px 10px;
+  border: 1px solid var(--mantine-color-default-border);
+  border-left: 3px solid var(--mantine-primary-color-filled);
+  background-color: var(--mantine-color-body);
+}
+
+.favourite:hover {
+  background-color: var(--mantine-color-forest-0);
+}
+
+[data-mantine-color-scheme='dark'] .favourite:hover {
+  background-color: var(--mantine-color-dark-5);
+}

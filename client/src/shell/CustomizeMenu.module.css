@@ -1,0 +1,22 @@
+/* One bordered block per module: a gray header row, then a row per page. */
+.module {
+  border: 1px solid var(--mantine-color-default-border);
+}
+
+.moduleTitle,
+.moduleHeader {
+  padding: 4px 8px;
+  font-size: var(--mantine-font-size-sm);
+  font-weight: 600;
+  background-color: var(--mantine-color-default-hover);
+  border-bottom: 1px solid var(--mantine-color-default-border);
+}
+
+.row {
+  padding: 2px 8px 2px 24px;
+  min-height: 28px;
+}
+
+.row + .row {
+  border-top: 1px solid var(--mantine-color-default-border);
+}

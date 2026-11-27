@@ -65,6 +65,15 @@
   background-color: var(--mantine-color-default-hover);
 }
 
+/* Between the favourites and the modules. */
+.menuRule {
+  align-self: center;
+  width: 1px;
+  height: 16px;
+  margin: 0 4px;
+  background-color: var(--mantine-color-default-border);
+}
+
 /* The module holding the open page. */
 .menuButton[data-active] {
   border-bottom-color: var(--mantine-primary-color-filled);

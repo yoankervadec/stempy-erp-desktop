@@ -13,6 +13,22 @@ const TEXTS = {
   toggleMenu: { fr: 'Afficher ou masquer le menu', en: 'Show or hide the menu' },
   menu: { fr: 'Menu', en: 'Menu' },
   home: { fr: 'Accueil', en: 'Home' },
+  favourites: { fr: 'Favoris', en: 'Favourites' },
+  favourite: { fr: 'Favori', en: 'Favourite' },
+  addFavourite: { fr: 'Ajouter aux favoris', en: 'Add to favourites' },
+  removeFavourite: { fr: 'Retirer des favoris', en: 'Remove from favourites' },
+  noFavourites: {
+    fr: "Aucun favori. Marquez une page avec l'étoile à côté de son titre.",
+    en: 'No favourites yet. Mark a page with the star beside its title.'
+  },
+  customizeMenu: { fr: 'Personnaliser le menu', en: 'Customize menu' },
+  customizeMenuHint: {
+    fr: 'Cochez ce que le menu montre. Les pages masquées restent dans la recherche (Alt+Q).',
+    en: 'Check what the menu shows. Hidden pages stay in the search (Alt+Q).'
+  },
+  resetMenu: { fr: 'Rétablir le menu', en: 'Reset menu' },
+  moveUp: { fr: 'Monter', en: 'Move up' },
+  moveDown: { fr: 'Descendre', en: 'Move down' },
   commandBarPlaceholder: {
     fr: 'Rechercher des pages et des commandes',
     en: 'Search pages and commands'

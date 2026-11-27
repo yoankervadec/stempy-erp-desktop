@@ -1,6 +1,5 @@
 import { Kbd, Modal, Text, UnstyledButton } from '@mantine/core'
 import { useHotkeys } from '@mantine/hooks'
-import { useNavigate } from '@tanstack/react-router'
 import { Fragment, useContext, useEffect, useRef, useState } from 'react'
 import {
   CommandContext,
@@ -8,7 +7,7 @@ import {
   type Command,
   type CommandLevel
 } from '../platform/commands'
-import { useMeta } from '../platform/meta'
+import { usePersonalMenu } from '../platform/menu'
 import { formatHotkey, isEditable, isHotkey } from '../platform/hotkeys'
 import { useText } from '../platform/useText'
 import classes from './CommandBar.module.css'
@@ -62,26 +61,26 @@ function rank(commands: Command[], terms: string[]): Command[] {
   )
 }
 
-/** Every page in /meta.menu, the module as its hint. */
+/**
+ * Every page /meta.menu offers, the module as its hint; favourites first.
+ * Pages hidden from the menu bar stay here: hiding tidies the menu only.
+ */
 function usePageCommands(): Command[] {
-  const meta = useMeta()
-  const navigate = useNavigate()
-  const label = (key: string, list: { key: string; label: string }[]): string =>
-    list.find((x) => x.key === key)?.label ?? key
-  return meta.menu.flatMap((group) => [
-    ...group.resources.map((key) => ({
-      id: `page:r:${key}`,
-      label: label(key, meta.resources),
-      hint: group.label,
-      run: () => void navigate({ to: '/r/$resourceKey', params: { resourceKey: key } })
+  const t = useText()
+  const menu = usePersonalMenu()
+  const favourites = new Set(menu.favourites.map((p) => p.id))
+  return [
+    ...menu.favourites.map((p) => ({
+      id: `page:${p.id}`,
+      label: p.label,
+      hint: `${t('favourite')} - ${p.module}`,
+      run: p.go
     })),
-    ...group.reports.map((key) => ({
-      id: `page:report:${key}`,
-      label: label(key, meta.reports),
-      hint: group.label,
-      run: () => void navigate({ to: '/reports/$reportKey', params: { reportKey: key } })
-    }))
-  ])
+    ...menu.all
+      .flatMap((m) => m.pages)
+      .filter((p) => !favourites.has(p.id))
+      .map((p) => ({ id: `page:${p.id}`, label: p.label, hint: p.module, run: p.go }))
+  ]
 }
 
 function Palette({
@@ -95,6 +94,25 @@ function Palette({
   const [query, setQuery] = useState('')
   const [active, setActive] = useState(0)
   const list = useRef<HTMLDivElement>(null)
+  const input = useRef<HTMLInputElement>(null)
+
+  // A menu that just closed hands the focus back to its button a moment later,
+  // after this opened: keys landing outside the input still belong to the bar.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent): void => {
+      if (e.target === input.current) return
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        e.stopPropagation()
+        onClose()
+        return
+      }
+      // Focused before the key's default action: a typed letter lands in the input.
+      input.current?.focus()
+    }
+    window.addEventListener('keydown', onKey, true)
+    return () => window.removeEventListener('keydown', onKey, true)
+  }, [onClose])
 
   const terms = fold(query).split(/\s+/).filter(Boolean)
   const shown = sections
@@ -139,6 +157,7 @@ function Palette({
   return (
     <>
       <input
+        ref={input}
         className={classes.input}
         autoFocus
         // Escape here closes the bar only: Mantine's modals ignore keys from this input,

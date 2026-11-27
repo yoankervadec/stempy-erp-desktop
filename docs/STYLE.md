@@ -56,6 +56,15 @@ there, not with inline styles on a screen.
   - **Pinned** (the default): the bar always shows and the page sits below it.
   - **Unpinned:** the bar is hidden. The menu button shows it over the page, and it
     hides again on navigation, `Esc` or a click outside.
+  - Favourites come first, as their own dropdown, ruled off from the modules.
+  - **Customize menu** (the sliders button beside the pin, the command bar, or the Home
+    page) shows every module and page: a checkbox to show or hide each, up / down for
+    modules and favourites, a star per page, and "Reset menu" (order and hidden entries;
+    favourites stay). It is the user preference `menu`; `/meta.menu` still decides what
+    exists. Hidden pages stay in the command bar's Go to.
+  - A star beside a list's or report's title (and an Add to / Remove from favourites
+    command) makes the page a favourite. The Home page shows favourites as bordered
+    tiles; the command bar lists them first.
   - The pin button sits at the right end of the bar. The choice is a user preference
     (`shell.menuPinned`, see `docs/PREFERENCES_API.md`).
   - There is no side navigation.

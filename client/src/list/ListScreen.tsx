@@ -10,6 +10,7 @@ import type { Id, MetaAction, MetaResource, QuerySpec, Row } from '../api/types'
 import { RecordModal } from '../record/RecordModal'
 import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
+import { resourcePageId } from '../platform/menu'
 import { useLanguage } from '../platform/meta'
 import { isBoolean, usePreference } from '../platform/preferences'
 import { useSessionInfo } from '../platform/session'
@@ -402,6 +403,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   return (
     <Page
       title={resource.label}
+      favourite={resourcePageId(resource.key)}
       badge={
         activeView && (
           <Badge title={viewsControl.modified ? t('viewModified') : undefined}>

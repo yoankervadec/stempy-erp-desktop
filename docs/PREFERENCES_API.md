@@ -88,7 +88,7 @@ The client owns the key names. They are listed here only so a stored row can be 
 | `list.filterPaneOpen` | `boolean`, the filter pane open on every list |
 | `list.<resourceKey>` | `{ order?: string[], visible?: {name: boolean}, widths?: {name: px}, sort?: [{field, dir}], pageSize?: number }` |
 | `views.<resourceKey>@<companyId>` | `{ views: [{ id, name, filters: [{ field, choice, value?, display }], search?, sort? }], last?: id }`: the list's saved views in one company (filter values can name its records); `last` is the one the list opens on |
-| `menu` | (step 4) hidden menu entries, order, favourites |
+| `menu` | `{ hidden?: string[], order?: string[], favourites?: string[] }`: page ids (`r:<resourceKey>`, `report:<reportKey>`) and module ids (`m:<module>`) hidden from the menu bar, module names in the user's order, favourite page ids in order |
 
 ## Storage suggestion
 
