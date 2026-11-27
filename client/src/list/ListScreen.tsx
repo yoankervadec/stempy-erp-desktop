@@ -223,7 +223,23 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   )
 
   return (
-    <Page title={resource.label} actions={actions} tools={tools} flush>
+    <Page
+      title={resource.label}
+      actions={actions}
+      tools={tools}
+      commands={
+        canFilter
+          ? [
+              {
+                id: 'filters',
+                label: paneOpen ? t('hideFilters') : t('showFilters'),
+                run: () => setPaneOpen((o) => !o)
+              }
+            ]
+          : []
+      }
+      flush
+    >
       {canFilter && paneOpen && (
         <FilterPane
           resource={resource}

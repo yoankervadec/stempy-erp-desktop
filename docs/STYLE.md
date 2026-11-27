@@ -48,7 +48,7 @@ there, not with inline styles on a screen.
 - **App header:** a solid `forest-8` band, 36px high. It holds:
   - the menu button (only while the menu bar is unpinned)
   - the app name
-  - the command bar in the center (step 4)
+  - the command bar trigger in the center
   - the company and user menus
 - **Menu bar:** a 30px bar under the app header, built from `/meta.menu`.
   - Each module is a dropdown listing its resources, then a rule, then its reports.
@@ -81,6 +81,26 @@ there, not with inline styles on a screen.
   - The "Filters (n)" tool in the page header toggles the pane. Its state is shared by
     all lists and kept in `localStorage` (`stempy.filterPaneOpen`).
   - Filters stay applied while the pane is closed.
+
+## Command bar
+
+- It opens with `Alt+Q` (the physical Q key, so it works on a Mac too), `Ctrl+K` or
+  `Cmd+K`, or a click on the trigger.
+- It lists three sections:
+  - **This page:** the front-most action bar, plus a page's extra commands (such as
+    show or hide filters)
+  - **Go to:** every page from `/meta.menu`, with its module as a hint
+  - **Application:** home, pin or unpin the menu, sign out
+- Matching ignores case and accents and needs every typed word. Labels that start with
+  the first word come first.
+- Arrow keys move, `Enter` runs and `Esc` closes. A disabled action is listed but does
+  not run.
+- How a screen offers commands:
+  - `Page` registers its `actions` automatically, plus its `commands` prop.
+  - A record modal registers its bar at the `modal` level, which covers the page's.
+  - The store (`platform/commands.ts`) lives outside React state: the bar reads it when
+    it opens.
+- `PageAction.shortcut` is shown beside a command.
 
 ## Keyboard (target; inspired by NAV / Business Central)
 

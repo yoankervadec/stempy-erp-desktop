@@ -3,6 +3,7 @@ import { useCallback, useRef, useState } from 'react'
 import type { Id, MetaResource } from '../api/types'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
+import { CommandLayer } from '../shell/CommandBar'
 import { ActionBar } from '../shell/Page'
 import classes from './RecordModal.module.css'
 import { RecordView } from './RecordView'
@@ -51,6 +52,7 @@ export function RecordModal({
             scrollAreaComponent={ScrollArea.Autosize}
             closeOnEscape={!asking}
           >
+            <CommandLayer actions={actions} level="modal" />
             {/* The same action bar as a record page, at the top. */}
             {actions.some((g) => g.length > 0) && (
               <Group mb="md" pb={6} className={classes.bar}>

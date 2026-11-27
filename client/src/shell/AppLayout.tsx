@@ -3,12 +3,14 @@ import { useClickOutside, useHotkeys, useLocalStorage } from '@mantine/hooks'
 import { notifications } from '@mantine/notifications'
 import { Outlet, useLocation, useNavigate } from '@tanstack/react-router'
 import { useState } from 'react'
+import { CommandContext, CommandStore, type Command } from '../platform/commands'
 import type { LanguageChoice } from '../../../src/shared/bridge'
 import { ApiError } from '../api/client'
 import { useMeta } from '../platform/meta'
 import { useSession, useSessionInfo } from '../platform/session'
 import { useText } from '../platform/useText'
 import classes from './AppLayout.module.css'
+import { CommandBar } from './CommandBar'
 
 function showError(error: unknown, requestIdLabel: string): void {
   const p = error instanceof ApiError ? error.problem : null
@@ -215,59 +217,75 @@ export function AppLayout(): React.JSX.Element {
   const header = useClickOutside(() => setShown(false))
   useHotkeys([['Escape', () => setShown(false)]], [], true)
   const barVisible = pinned || shown
+  const [commands] = useState(() => new CommandStore())
+  const { logout } = useSession()
+  const appCommands: Command[] = [
+    { id: 'app:home', label: t('home'), run: () => void navigate({ to: '/' }) },
+    {
+      id: 'app:pin',
+      label: pinned ? t('unpinMenu') : t('pinMenu'),
+      run: () => {
+        setPinned((p) => !p)
+        setShown(false)
+      }
+    },
+    { id: 'app:signOut', label: t('signOut'), run: () => void logout() }
+  ]
 
   return (
-    <AppShell
-      header={{ height: pinned ? HEADER_HEIGHT + BAR_HEIGHT : HEADER_HEIGHT }}
-      padding={0}
-      transitionDuration={0}
-    >
-      <AppShell.Header className={classes.header} ref={header}>
-        <Group h={HEADER_HEIGHT} px="xs" justify="space-between" wrap="nowrap">
-          <Group gap={6} wrap="nowrap">
-            {!pinned && (
+    <CommandContext.Provider value={commands}>
+      <AppShell
+        header={{ height: pinned ? HEADER_HEIGHT + BAR_HEIGHT : HEADER_HEIGHT }}
+        padding={0}
+        transitionDuration={0}
+      >
+        <AppShell.Header className={classes.header} ref={header}>
+          <Group h={HEADER_HEIGHT} px="xs" justify="space-between" wrap="nowrap">
+            <Group gap={6} wrap="nowrap">
+              {!pinned && (
+                <UnstyledButton
+                  className={classes.headerIcon}
+                  aria-label={t('toggleMenu')}
+                  title={t('toggleMenu')}
+                  aria-expanded={shown}
+                  onClick={() => setShown((o) => !o)}
+                >
+                  <MenuIcon />
+                </UnstyledButton>
+              )}
               <UnstyledButton
-                className={classes.headerIcon}
-                aria-label={t('toggleMenu')}
-                title={t('toggleMenu')}
-                aria-expanded={shown}
-                onClick={() => setShown((o) => !o)}
+                className={classes.appName}
+                onClick={() => {
+                  setShown(false)
+                  void navigate({ to: '/' })
+                }}
               >
-                <MenuIcon />
+                {t('appName')}
               </UnstyledButton>
-            )}
-            <UnstyledButton
-              className={classes.appName}
-              onClick={() => {
-                setShown(false)
-                void navigate({ to: '/' })
-              }}
-            >
-              {t('appName')}
-            </UnstyledButton>
+            </Group>
+            <CommandBar appCommands={appCommands} />
+            <Group gap={2} wrap="nowrap">
+              <CompanyMenu />
+              <UserMenu />
+            </Group>
           </Group>
-          {/* The command bar (Alt+Q) goes in the middle. */}
-          <Group gap={2} wrap="nowrap">
-            <CompanyMenu />
-            <UserMenu />
-          </Group>
-        </Group>
-        {barVisible && (
-          <div className={pinned ? undefined : classes.floatingBar}>
-            <MenuBar
-              pinned={pinned}
-              onTogglePin={() => {
-                setPinned((p) => !p)
-                setShown(false)
-              }}
-              onNavigate={() => setShown(false)}
-            />
-          </div>
-        )}
-      </AppShell.Header>
-      <AppShell.Main>
-        <Outlet />
-      </AppShell.Main>
-    </AppShell>
+          {barVisible && (
+            <div className={pinned ? undefined : classes.floatingBar}>
+              <MenuBar
+                pinned={pinned}
+                onTogglePin={() => {
+                  setPinned((p) => !p)
+                  setShown(false)
+                }}
+                onNavigate={() => setShown(false)}
+              />
+            </div>
+          )}
+        </AppShell.Header>
+        <AppShell.Main>
+          <Outlet />
+        </AppShell.Main>
+      </AppShell>
+    </CommandContext.Provider>
   )
 }

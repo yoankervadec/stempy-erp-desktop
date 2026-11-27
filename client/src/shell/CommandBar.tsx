@@ -1,0 +1,247 @@
+import { Kbd, Modal, Text, UnstyledButton } from '@mantine/core'
+import { useHotkeys } from '@mantine/hooks'
+import { useNavigate } from '@tanstack/react-router'
+import { Fragment, useContext, useEffect, useRef, useState } from 'react'
+import {
+  CommandContext,
+  useCommandLayer,
+  type Command,
+  type CommandLevel
+} from '../platform/commands'
+import { useMeta } from '../platform/meta'
+import { useText } from '../platform/useText'
+import classes from './CommandBar.module.css'
+import type { ActionGroups } from './Page'
+
+/** Offers a page's (or a modal's) action bar in the command bar. Renders nothing. */
+export function CommandLayer({
+  actions,
+  extra = [],
+  level = 'page'
+}: {
+  actions: ActionGroups
+  extra?: Command[]
+  level?: CommandLevel
+}): null {
+  const commands: Command[] = [
+    ...actions.flat().map((a) => ({
+      id: a.key,
+      label: a.label,
+      shortcut: a.shortcut,
+      disabled: a.disabled || a.loading,
+      run: a.onClick
+    })),
+    ...extra
+  ]
+  useCommandLayer(commands, level)
+  return null
+}
+
+interface Section {
+  title: string
+  commands: Command[]
+}
+
+/** Lower case, accents dropped: "Écriture" matches "ecri". */
+function fold(s: string): string {
+  return s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase()
+}
+
+function matches(c: Command, terms: string[]): boolean {
+  const text = fold(`${c.label} ${c.hint ?? ''}`)
+  return terms.every((t) => text.includes(t))
+}
+
+/** Pages whose label starts with what was typed come first. */
+function rank(commands: Command[], terms: string[]): Command[] {
+  if (terms.length === 0) return commands
+  const first = terms[0]
+  return [...commands].sort(
+    (a, b) => Number(!fold(a.label).startsWith(first)) - Number(!fold(b.label).startsWith(first))
+  )
+}
+
+/** Every page in /meta.menu, the module as its hint. */
+function usePageCommands(): Command[] {
+  const meta = useMeta()
+  const navigate = useNavigate()
+  const label = (key: string, list: { key: string; label: string }[]): string =>
+    list.find((x) => x.key === key)?.label ?? key
+  return meta.menu.flatMap((group) => [
+    ...group.resources.map((key) => ({
+      id: `page:r:${key}`,
+      label: label(key, meta.resources),
+      hint: group.label,
+      run: () => void navigate({ to: '/r/$resourceKey', params: { resourceKey: key } })
+    })),
+    ...group.reports.map((key) => ({
+      id: `page:report:${key}`,
+      label: label(key, meta.reports),
+      hint: group.label,
+      run: () => void navigate({ to: '/reports/$reportKey', params: { reportKey: key } })
+    }))
+  ])
+}
+
+function Palette({
+  sections,
+  onClose
+}: {
+  sections: Section[]
+  onClose: () => void
+}): React.JSX.Element {
+  const t = useText()
+  const [query, setQuery] = useState('')
+  const [active, setActive] = useState(0)
+  const list = useRef<HTMLDivElement>(null)
+
+  const terms = fold(query).split(/\s+/).filter(Boolean)
+  const shown = sections
+    .map((s) => ({
+      ...s,
+      commands: rank(
+        s.commands.filter((c) => matches(c, terms)),
+        terms
+      )
+    }))
+    .filter((s) => s.commands.length > 0)
+  const flat = shown.flatMap((s) => s.commands)
+  const current = Math.min(active, Math.max(0, flat.length - 1))
+
+  useEffect(() => {
+    list.current?.querySelector(`[data-index="${current}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [current])
+
+  const run = (c: Command | undefined): void => {
+    if (!c || c.disabled) return
+    onClose()
+    c.run()
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent): void => {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setActive((current + 1) % Math.max(1, flat.length))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setActive((current - 1 + flat.length) % Math.max(1, flat.length))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      run(flat[current])
+    } else if (e.key === 'Escape') {
+      e.preventDefault()
+      onClose()
+    }
+  }
+
+  let index = 0
+  return (
+    <>
+      <input
+        className={classes.input}
+        autoFocus
+        // Escape here closes the bar only: Mantine's modals ignore keys from this input,
+        // so a record modal open under the bar stays open.
+        data-mantine-stop-propagation="true"
+        placeholder={t('commandBarPlaceholder')}
+        aria-label={t('commandBarPlaceholder')}
+        value={query}
+        onChange={(e) => {
+          setQuery(e.currentTarget.value)
+          setActive(0)
+        }}
+        onKeyDown={onKeyDown}
+      />
+      <div className={classes.list} ref={list} role="listbox">
+        {flat.length === 0 && (
+          <Text size="sm" c="dimmed" p="sm">
+            {t('nothingMatches')}
+          </Text>
+        )}
+        {shown.map((s) => (
+          <Fragment key={s.title}>
+            <div className={classes.section}>{s.title}</div>
+            {s.commands.map((c) => {
+              const i = index++
+              return (
+                <div
+                  key={c.id}
+                  role="option"
+                  aria-selected={i === current}
+                  aria-disabled={c.disabled || undefined}
+                  data-index={i}
+                  className={classes.item}
+                  onMouseMove={() => i !== current && setActive(i)}
+                  onClick={() => run(c)}
+                >
+                  <span className={classes.label}>
+                    {c.label}
+                    {c.hint && <span className={classes.hint}>{c.hint}</span>}
+                  </span>
+                  {c.shortcut && <Kbd size="xs">{c.shortcut}</Kbd>}
+                </div>
+              )
+            })}
+          </Fragment>
+        ))}
+      </div>
+    </>
+  )
+}
+
+/**
+ * The command bar, as in VS Code or Business Central's "Tell me": Alt+Q or
+ * Ctrl+K, then type. It lists the front-most page's commands, every page, and
+ * the application's own commands.
+ */
+export function CommandBar({ appCommands }: { appCommands: Command[] }): React.JSX.Element {
+  const t = useText()
+  const store = useContext(CommandContext)
+  const pages = usePageCommands()
+  const [sections, setSections] = useState<Section[] | null>(null)
+
+  const open = (): void => {
+    if (sections) return
+    setSections([
+      { title: t('commandsThisPage'), commands: store?.current() ?? [] },
+      { title: t('commandsGoTo'), commands: pages },
+      { title: t('commandsApp'), commands: appCommands }
+    ])
+  }
+
+  // Inside inputs too: the bar is reachable from anywhere.
+  useHotkeys(
+    [
+      ['alt+q', open, { usePhysicalKeys: true }],
+      ['mod+k', open]
+    ],
+    []
+  )
+
+  return (
+    <>
+      <UnstyledButton className={classes.trigger} onClick={open}>
+        <span>{t('commandBarPlaceholder')}</span>
+        <Kbd size="xs" className={classes.triggerKey}>
+          Alt+Q
+        </Kbd>
+      </UnstyledButton>
+      <Modal
+        opened={sections !== null}
+        onClose={() => setSections(null)}
+        withCloseButton={false}
+        padding={0}
+        size={560}
+        yOffset={48}
+        // A command may open its own dialog: focus must not jump back to the trigger.
+        returnFocus={false}
+        closeOnEscape={false}
+        // Above any record modal or dialog the command is about.
+        zIndex={400}
+        aria-label={t('commandBarPlaceholder')}
+      >
+        {sections && <Palette sections={sections} onClose={() => setSections(null)} />}
+      </Modal>
+    </>
+  )
+}

@@ -1,5 +1,7 @@
 import { Anchor, Box, Button, Divider, Group, Text } from '@mantine/core'
 import { Fragment, type ReactNode } from 'react'
+import type { Command } from '../platform/commands'
+import { CommandLayer } from './CommandBar'
 import classes from './Page.module.css'
 
 /**
@@ -14,6 +16,8 @@ export interface PageAction {
   /** Shown on hover, e.g. why the action is disabled. */
   title?: string
   loading?: boolean
+  /** The key that runs it, as shown in the command bar (e.g. "Ctrl+N"). */
+  shortcut?: string
   /** The page's main action (Save): drawn filled. Others are flat. */
   primary?: boolean
   danger?: boolean
@@ -65,6 +69,8 @@ export interface PageProps {
   actions?: ActionGroups
   /** Right end of the action bar: search box, column chooser. */
   tools?: ReactNode
+  /** More commands for the command bar, beyond the action bar's. */
+  commands?: Command[]
   /**
    * The body lays out its own columns (a list's filter pane beside its grid): no
    * padding, a row that fills the window's height.
@@ -83,6 +89,7 @@ export function Page({
   parent,
   actions,
   tools,
+  commands,
   flush,
   children
 }: PageProps): React.JSX.Element {
@@ -115,6 +122,7 @@ export function Page({
         )}
       </Box>
       <Box className={flush ? classes.flushBody : classes.body}>{children}</Box>
+      <CommandLayer actions={actions ?? []} extra={commands} />
     </div>
   )
 }

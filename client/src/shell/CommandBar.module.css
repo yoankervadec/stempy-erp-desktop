@@ -1,0 +1,88 @@
+/* The trigger in the application bar: a dark field on the accent band. */
+.trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  width: 420px;
+  max-width: 40vw;
+  height: 24px;
+  padding: 0 4px 0 8px;
+  font-size: var(--mantine-font-size-sm);
+  color: var(--mantine-color-forest-1);
+  background-color: var(--mantine-color-forest-9);
+  border: 1px solid var(--mantine-color-forest-7);
+}
+
+.trigger:hover {
+  border-color: var(--mantine-color-forest-4);
+}
+
+.triggerKey {
+  color: var(--mantine-color-forest-1);
+  background-color: transparent;
+  border-color: var(--mantine-color-forest-6);
+}
+
+.input {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--mantine-color-text);
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--mantine-color-default-border);
+  outline: none;
+}
+
+.list {
+  max-height: 420px;
+  overflow-y: auto;
+  padding-bottom: 4px;
+}
+
+.section {
+  padding: 6px 10px 2px;
+  font-size: var(--mantine-font-size-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--mantine-color-dimmed);
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 10px;
+  font-size: var(--mantine-font-size-sm);
+  cursor: pointer;
+}
+
+.item[aria-selected='true'] {
+  color: var(--mantine-color-white);
+  background-color: var(--mantine-primary-color-filled);
+}
+
+.item[aria-disabled] {
+  color: var(--mantine-color-dimmed);
+  cursor: default;
+}
+
+.item[aria-selected='true'][aria-disabled] {
+  color: var(--mantine-color-gray-3);
+}
+
+.label {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.hint {
+  margin-left: 8px;
+  opacity: 0.7;
+}
