@@ -122,21 +122,21 @@ const TEXTS = {
   viewList: { fr: 'Afficher la liste', en: 'View list' },
   discardChanges: { fr: 'Abandonner les modifications', en: 'Discard changes' },
   rowsNotSaved: {
-    fr: 'Des lignes n’ont pas été enregistrées',
+    fr: "Des lignes n'ont pas été enregistrées",
     en: 'Some rows were not saved'
   },
   conflictTitle: {
-    fr: 'Modifié par quelqu’un d’autre',
+    fr: "Modifié par quelqu'un d'autre",
     en: 'Changed by someone else'
   },
   conflictBody: {
-    fr: 'Cet enregistrement a été modifié depuis que vous l’avez ouvert. Rechargez-le, ou gardez vos modifications pour les enregistrer par-dessus la nouvelle version.',
+    fr: "Cet enregistrement a été modifié depuis que vous l'avez ouvert. Rechargez-le, ou gardez vos modifications pour les enregistrer par-dessus la nouvelle version.",
     en: 'This record changed since you opened it. Reload it, or keep your changes to save them over the new version.'
   },
   reload: { fr: 'Recharger', en: 'Reload' },
   keepMine: { fr: 'Garder mes modifications', en: 'Keep my changes' },
   saveFirst: {
-    fr: 'Enregistrez ou annulez vos modifications d’abord',
+    fr: "Enregistrez ou annulez vos modifications d'abord",
     en: 'Save or cancel your changes first'
   },
   warnings: { fr: 'Avertissements', en: 'Warnings' },
