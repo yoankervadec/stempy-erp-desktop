@@ -81,7 +81,7 @@ The client owns the key names. They are listed here only so a stored row can be 
 |---|---|
 | `shell.menuPinned` | `boolean`, the menu bar always visible |
 | `list.filterPaneOpen` | `boolean`, the filter pane open on every list |
-| `list.<resourceKey>` | (step 2) columns, sort, page size of that list |
+| `list.<resourceKey>` | `{ order?: string[], visible?: {name: boolean}, widths?: {name: px}, sort?: [{field, dir}], pageSize?: number }` |
 | `views.<resourceKey>@<companyId>` | (step 3) the list's saved filter views in one company: filter values name that company's records |
 | `menu` | (step 4) hidden menu entries, order, favourites |
 

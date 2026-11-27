@@ -56,8 +56,8 @@ there, not with inline styles on a screen.
   - **Pinned** (the default): the bar always shows and the page sits below it.
   - **Unpinned:** the bar is hidden. The menu button shows it over the page, and it
     hides again on navigation, `Esc` or a click outside.
-  - The pin button sits at the right end of the bar. The choice is kept in
-    `localStorage` (`stempy.menuPinned`).
+  - The pin button sits at the right end of the bar. The choice is a user preference
+    (`shell.menuPinned`, see `docs/PREFERENCES_API.md`).
   - There is no side navigation.
 - **Page:** every signed-in screen renders `<Page>` (`client/src/shell/Page.tsx`), a
   sticky gray header band. In order, it holds:
@@ -79,8 +79,18 @@ there, not with inline styles on a screen.
   - An "Add filter" form opens inline in the pane.
   - "Clear all" appears from two conditions up.
   - The "Filters (n)" tool in the page header toggles the pane. Its state is shared by
-    all lists and kept in `localStorage` (`stempy.filterPaneOpen`).
+    all lists and kept as a user preference (`list.filterPaneOpen`).
   - Filters stay applied while the pane is closed.
+- **List columns** have fixed widths (NAV), from the field's type until the user changes
+  them; the grid is as wide as its columns, not stretched.
+  - Drag a header's right edge to resize; double-click the edge for the default width.
+  - Drag a header to move the column; a bar marks where it lands.
+  - The Columns tool lists every column in order: show or hide, move left or right
+    (the keyboard's way), and "Reset columns" (also in the command bar).
+  - Order, shown columns, widths, sort and rows per page are kept per list as the user
+    preference `list.<resourceKey>`, read against `/meta`: a field the server drops is
+    ignored, a new one shows in its default place.
+  - Record child lists keep automatic widths.
 
 ## Command bar
 

@@ -1,18 +1,12 @@
-import { Alert, Button, Checkbox, Group, Menu, Select, Stack, Text, TextInput } from '@mantine/core'
+import { Alert, Button, Group, Select, Stack, Text, TextInput } from '@mantine/core'
 import { useDebouncedValue } from '@mantine/hooks'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import {
-  getCoreRowModel,
-  useReactTable,
-  type ColumnDef,
-  type SortingState,
-  type VisibilityState
-} from '@tanstack/react-table'
+import { getCoreRowModel, useReactTable, type ColumnDef } from '@tanstack/react-table'
 import { useBlocker, useNavigate } from '@tanstack/react-router'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { ActionDialog, type ActionResult } from '../actions/ActionDialog'
 import { queryList, sortOrDefault } from '../api/query'
-import type { Id, MetaAction, MetaField, MetaResource, QuerySpec, Row } from '../api/types'
+import type { Id, MetaAction, MetaResource, QuerySpec, Row } from '../api/types'
 import { RecordModal } from '../record/RecordModal'
 import { DataGrid, type ActiveCell } from '../grid/DataGrid'
 import { alignOf, formatValue } from '../platform/format'
@@ -22,7 +16,23 @@ import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
 import { ErrorAlert } from '../shell/ErrorAlert'
 import { Page, type ActionGroups } from '../shell/Page'
+import { ColumnsPanel } from './ColumnsPanel'
 import { FilterPane } from './FilterPane'
+import {
+  defaultWidth,
+  EMPTY_LAYOUT,
+  isListLayout,
+  MAX_WIDTH,
+  MIN_WIDTH,
+  moveColumn,
+  PAGE_SIZES,
+  resolveOrder,
+  resolvePageSize,
+  resolveSorting,
+  resolveVisibility,
+  resolveWidths,
+  type ListLayout
+} from './layout'
 import { ListCell } from './ListCell'
 import { canEditInList, canEditList, ListEditorContext, useListEditor } from './useListEditor'
 import classes from './ListScreen.module.css'
@@ -35,32 +45,9 @@ import {
   type FilterChoice
 } from './filters'
 
-const PAGE_SIZES = ['25', '50', '100', '200']
 /** One empty list for every render: a new [] each time would look like new rows. */
 const NO_ROWS: Row[] = []
 const MAX_SORT_KEYS = 3
-
-function initialSorting(resource: MetaResource): SortingState {
-  const known = new Set(resource.fields.map((f) => f.name))
-  return resource.defaultSort
-    .filter((s) => known.has(s.field))
-    .map((s) => ({ id: s.field, desc: s.dir === 'desc' }))
-}
-
-/** The listColumns in the server's order, then every other field (hidden until chosen). */
-function columnOrder(resource: MetaResource): MetaField[] {
-  const first = resource.listColumns
-    .map((name) => resource.fields.find((f) => f.name === name))
-    .filter((f): f is MetaField => !!f)
-  return [...first, ...resource.fields.filter((f) => !first.includes(f))]
-}
-
-/** Columns shown first: the resource's listColumns; the others can be turned on. */
-function initialVisibility(resource: MetaResource): VisibilityState {
-  const shown = new Set(resource.listColumns)
-  if (shown.size === 0) return {}
-  return Object.fromEntries(resource.fields.map((f) => [f.name, shown.has(f.name)]))
-}
 
 /**
  * The generic list of one resource: columns from /meta, and every sort,
@@ -85,8 +72,17 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
       })
   }
 
-  const [sorting, setSorting] = useState<SortingState>(() => initialSorting(resource))
-  const [visibility, setVisibility] = useState<VisibilityState>(() => initialVisibility(resource))
+  // The user's layout of this list (columns, sort, page size), over the server's defaults.
+  const [layout, setLayout] = usePreference(`list.${resource.key}`, EMPTY_LAYOUT, isListLayout)
+  const patchLayout = (patch: Partial<ListLayout>): void => setLayout((l) => ({ ...l, ...patch }))
+  const order = useMemo(() => resolveOrder(resource, layout.order), [resource, layout.order])
+  const visibility = useMemo(
+    () => resolveVisibility(resource, layout.visible),
+    [resource, layout.visible]
+  )
+  const widths = useMemo(() => resolveWidths(resource, layout.widths), [resource, layout.widths])
+  const sorting = useMemo(() => resolveSorting(resource, layout.sort), [resource, layout.sort])
+  const limit = resolvePageSize(layout.pageSize)
   const [filters, setFilters] = useState<AppliedFilter[]>([])
   // Shared by every list.
   const [paneOpen, setPaneOpen] = usePreference('list.filterPaneOpen', true, isBoolean)
@@ -94,7 +90,6 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
   const [activeCell, setActiveCell] = useState<ActiveCell<Row> | null>(null)
   const [searchInput, setSearchInput] = useState('')
   const [search] = useDebouncedValue(searchInput.trim(), 300)
-  const [limit, setLimit] = useState(50)
   const [offset, setOffset] = useState(0)
 
   // Any change to what is asked starts again at the first page.
@@ -167,12 +162,15 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
 
   const columns = useMemo<ColumnDef<Row>[]>(
     () =>
-      columnOrder(resource).map((f) => ({
+      resource.fields.map((f) => ({
         id: f.name,
         accessorFn: (row) => row[f.name],
         header: f.label,
         enableSorting: f.sortable,
         enableHiding: true,
+        size: defaultWidth(f),
+        minSize: MIN_WIDTH,
+        maxSize: MAX_WIDTH,
         meta: { align: alignOf(f.type) },
         cell: ({ row }) => <ListCell field={f} row={row.original} />
       })),
@@ -193,10 +191,25 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
     enableMultiSort: true,
     maxMultiSortColCount: MAX_SORT_KEYS,
     sortDescFirst: false,
-    state: { sorting, columnVisibility: visibility },
-    onSortingChange: setSorting,
-    onColumnVisibilityChange: setVisibility
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
+    state: { sorting, columnVisibility: visibility, columnOrder: order, columnSizing: widths },
+    onSortingChange: (u) => {
+      const next = typeof u === 'function' ? u(sorting) : u
+      patchLayout({ sort: next.map((s) => ({ field: s.id, dir: s.desc ? 'desc' : 'asc' })) })
+    },
+    onColumnVisibilityChange: (u) =>
+      patchLayout({ visible: typeof u === 'function' ? u(visibility) : u }),
+    onColumnSizingChange: (u) => patchLayout({ widths: typeof u === 'function' ? u(widths) : u })
   })
+
+  const moveBy = (id: string, step: -1 | 1): void => {
+    const target = order[order.indexOf(id) + step]
+    if (target) patchLayout({ order: moveColumn(order, id, target, step < 0 ? 'before' : 'after') })
+  }
+  // Back to the server's columns; the sort and page size stay.
+  const resetColumns = (): void =>
+    patchLayout({ order: undefined, visible: undefined, widths: undefined })
 
   const rows = list.data?.data ?? []
   const page = list.data?.page
@@ -307,23 +320,7 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
           onChange={(e) => setSearchInput(e.currentTarget.value)}
         />
       )}
-      <Menu closeOnItemClick={false} position="bottom-end">
-        <Menu.Target>
-          <Button variant="default">{t('columns')}</Button>
-        </Menu.Target>
-        <Menu.Dropdown mah={400} style={{ overflowY: 'auto' }}>
-          {table.getAllLeafColumns().map((column) => (
-            <Menu.Item key={column.id} onClick={column.getToggleVisibilityHandler()}>
-              <Checkbox
-                readOnly
-                checked={column.getIsVisible()}
-                label={String(column.columnDef.header)}
-                styles={{ input: { cursor: 'pointer' }, label: { cursor: 'pointer' } }}
-              />
-            </Menu.Item>
-          ))}
-        </Menu.Dropdown>
-      </Menu>
+      <ColumnsPanel table={table} order={order} onMove={moveBy} onReset={resetColumns} />
     </>
   )
 
@@ -332,8 +329,8 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
       title={resource.label}
       actions={actions}
       tools={tools}
-      commands={
-        canFilter
+      commands={[
+        ...(canFilter
           ? [
               {
                 id: 'filters',
@@ -349,8 +346,9 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
                 run: () => cellFilter && setFilters(cellFilter)
               }
             ]
-          : []
-      }
+          : []),
+        { id: 'resetColumns', label: t('resetColumns'), run: resetColumns }
+      ]}
       flush
     >
       {canFilter && paneOpen && (
@@ -406,6 +404,9 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
             sortHint={t('sortHint')}
             onRowOpen={(row) => open(row.original[resource.idField] as Id)}
             onActiveCellChange={onActiveCellChange}
+            onColumnMove={(id, target, side) =>
+              patchLayout({ order: moveColumn(order, id, target, side) })
+            }
             editing={editor.editing}
             rowState={(row) =>
               editor.isSaving(row.original)
@@ -430,10 +431,10 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
             <Select
               size="xs"
               w={80}
-              data={PAGE_SIZES}
+              data={PAGE_SIZES.map(String)}
               value={String(limit)}
               allowDeselect={false}
-              onChange={(v) => v && setLimit(Number(v))}
+              onChange={(v) => v && patchLayout({ pageSize: Number(v) })}
               aria-label={t('rowsPerPage')}
             />
             <Button

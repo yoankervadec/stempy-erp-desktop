@@ -23,48 +23,131 @@ function SortArrow({ dir }: { dir: 'asc' | 'desc' }): React.JSX.Element {
   )
 }
 
+/** Where a dragged column would land, and its drop mark. */
+export type DropSide = 'before' | 'after'
+
+const COLUMN_TYPE = 'application/x-stempy-column'
+
+interface HeaderDrag {
+  /** The column being dragged, if any. */
+  dragging: string | null
+  setDragging: (id: string | null) => void
+  drop: { id: string; side: DropSide } | null
+  setDrop: (drop: { id: string; side: DropSide } | null) => void
+  onColumnMove: (id: string, target: string, side: DropSide) => void
+}
+
 function HeaderCell<T>({
   header,
   sortHint,
-  multiSort
+  multiSort,
+  drag
 }: {
   header: Header<T, unknown>
   sortHint?: string
   multiSort: boolean
+  drag?: HeaderDrag
 }): React.JSX.Element {
   const column = header.column
   const align = column.columnDef.meta?.align ?? 'left'
   const content = flexRender(column.columnDef.header, header.getContext())
   const sorted = column.getIsSorted()
   const sortIndex = column.getSortIndex()
-  if (!column.getCanSort()) {
-    return <Table.Th style={{ textAlign: align, whiteSpace: 'nowrap' }}>{content}</Table.Th>
-  }
+  const resizable = column.getCanResize()
+  const label = column.getCanSort() ? (
+    <UnstyledButton
+      onClick={column.getToggleSortingHandler()}
+      title={sortHint}
+      tabIndex={-1}
+      className={classes.sortButton}
+      style={{ flexDirection: align === 'right' ? 'row-reverse' : 'row' }}
+    >
+      <span className={classes.headerText}>{content}</span>
+      {sorted && <SortArrow dir={sorted} />}
+      {sorted && multiSort && (
+        <Text span size="xs" c="dimmed">
+          {sortIndex + 1}
+        </Text>
+      )}
+    </UnstyledButton>
+  ) : (
+    <span className={classes.headerText}>{content}</span>
+  )
+
+  const dropHere = drag?.drop?.id === column.id ? drag.drop.side : undefined
   return (
     <Table.Th
-      style={{ textAlign: align, whiteSpace: 'nowrap' }}
-      aria-sort={sorted === 'asc' ? 'ascending' : sorted === 'desc' ? 'descending' : 'none'}
+      style={{
+        textAlign: align,
+        whiteSpace: 'nowrap'
+      }}
+      className={classes.th}
+      data-drop={dropHere}
+      aria-sort={
+        !column.getCanSort()
+          ? undefined
+          : sorted === 'asc'
+            ? 'ascending'
+            : sorted === 'desc'
+              ? 'descending'
+              : 'none'
+      }
+      onDragOver={
+        drag &&
+        ((e) => {
+          if (!drag.dragging || !e.dataTransfer.types.includes(COLUMN_TYPE)) return
+          e.preventDefault()
+          e.dataTransfer.dropEffect = 'move'
+          const box = e.currentTarget.getBoundingClientRect()
+          const side: DropSide = e.clientX < box.left + box.width / 2 ? 'before' : 'after'
+          if (drag.drop?.id !== column.id || drag.drop.side !== side) {
+            drag.setDrop({ id: column.id, side })
+          }
+        })
+      }
+      onDrop={
+        drag &&
+        ((e) => {
+          e.preventDefault()
+          if (drag.dragging && dropHere) drag.onColumnMove(drag.dragging, column.id, dropHere)
+          drag.setDragging(null)
+          drag.setDrop(null)
+        })
+      }
     >
-      <UnstyledButton
-        onClick={column.getToggleSortingHandler()}
-        title={sortHint}
-        tabIndex={-1}
-        style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 4,
-          fontWeight: 'inherit',
-          flexDirection: align === 'right' ? 'row-reverse' : 'row'
-        }}
+      {/* The label is what is dragged: the resize handle beside it must not start a drag. */}
+      <div
+        className={classes.headerLabel}
+        style={{ justifyContent: align === 'right' ? 'flex-end' : 'flex-start' }}
+        draggable={!!drag}
+        onDragStart={
+          drag &&
+          ((e) => {
+            e.dataTransfer.setData(COLUMN_TYPE, column.id)
+            e.dataTransfer.effectAllowed = 'move'
+            drag.setDragging(column.id)
+          })
+        }
+        onDragEnd={
+          drag &&
+          (() => {
+            drag.setDragging(null)
+            drag.setDrop(null)
+          })
+        }
       >
-        <span>{content}</span>
-        {sorted && <SortArrow dir={sorted} />}
-        {sorted && multiSort && (
-          <Text span size="xs" c="dimmed">
-            {sortIndex + 1}
-          </Text>
-        )}
-      </UnstyledButton>
+        {label}
+      </div>
+      {resizable && (
+        <div
+          className={classes.resizer}
+          data-resizing={column.getIsResizing() || undefined}
+          onMouseDown={header.getResizeHandler()}
+          onDoubleClick={() => column.resetSize()}
+          onClick={(e) => e.stopPropagation()}
+          aria-hidden
+        />
+      )}
     </Table.Th>
   )
 }
@@ -96,6 +179,11 @@ export interface DataGridProps<T> {
   editing?: boolean
   /** How a row stands in edit mode, drawn at its start. */
   rowState?: (row: TableRow<T>) => 'dirty' | 'saving' | 'error' | undefined
+  /**
+   * Columns can be dragged by their header: told where one was dropped. (Widths
+   * follow the table's own enableColumnResizing: fixed, with a handle per header.)
+   */
+  onColumnMove?: (id: string, target: string, side: DropSide) => void
 }
 
 /** A field the user types in, where the arrows belong to the text or a dropdown. */
@@ -120,7 +208,8 @@ export function DataGrid<T>({
   onRowOpen: openRow,
   onActiveCellChange,
   editing,
-  rowState
+  rowState,
+  onColumnMove
 }: DataGridProps<T>): React.JSX.Element {
   const onRowOpen = editing ? undefined : openRow
   const rows = table.getRowModel().rows
@@ -128,6 +217,13 @@ export function DataGrid<T>({
   const multiSort = table.getState().sorting.length > 1
   const body = useRef<HTMLTableSectionElement>(null)
   const [cursor, setCursor] = useState({ row: 0, col: 0 })
+  const [dragging, setDragging] = useState<string | null>(null)
+  const [drop, setDrop] = useState<{ id: string; side: DropSide } | null>(null)
+  const drag: HeaderDrag | undefined = onColumnMove
+    ? { dragging, setDragging, drop, setDrop, onColumnMove }
+    : undefined
+  // Sized columns: a fixed layout, as wide as its columns (NAV), not stretched.
+  const fixed = !!table.options.enableColumnResizing
 
   // The rows or columns changed (another page, a filter): stay inside them.
   const row = Math.min(cursor.row, Math.max(0, rows.length - 1))
@@ -198,15 +294,25 @@ export function DataGrid<T>({
   return (
     <Box pos="relative">
       <LoadingOverlay visible={!!loading} />
-      <Table.ScrollContainer minWidth={columns.length * 120}>
+      <Table.ScrollContainer minWidth={fixed ? table.getTotalSize() : columns.length * 120}>
         <Table
           stickyHeader
           className={classes.grid}
+          style={fixed ? { tableLayout: 'fixed', width: table.getTotalSize() } : undefined}
+          data-fixed={fixed || undefined}
           data-editing={editing || undefined}
           tabIndex={0}
           onKeyDown={onKeyDown}
           aria-rowcount={rows.length}
         >
+          {/* A fixed layout takes its widths from here; header widths are ignored. */}
+          {fixed && (
+            <colgroup>
+              {table.getVisibleLeafColumns().map((c) => (
+                <col key={c.id} style={{ width: c.getSize() }} />
+              ))}
+            </colgroup>
+          )}
           <Table.Thead>
             {table.getHeaderGroups().map((group) => (
               <Table.Tr key={group.id}>
@@ -216,6 +322,7 @@ export function DataGrid<T>({
                     header={header}
                     sortHint={sortHint}
                     multiSort={multiSort}
+                    drag={drag}
                   />
                 ))}
               </Table.Tr>

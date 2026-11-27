@@ -10,6 +10,64 @@
   cursor: default;
 }
 
+/* Fixed widths: the user sizes the columns, a cell cuts what does not fit. */
+.grid[data-fixed] td {
+  max-width: none;
+}
+
+/* Headers: a label (sorts on click, moves on drag) and a resize handle at the right edge. */
+.th {
+  position: relative;
+}
+
+.headerLabel {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.sortButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  font-weight: inherit;
+}
+
+.headerText {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.resizer {
+  position: absolute;
+  top: 0;
+  right: -3px;
+  z-index: 1;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+.resizer:hover,
+.resizer[data-resizing] {
+  background-color: var(--mantine-primary-color-filled);
+  background-clip: content-box;
+  padding: 0 2px;
+}
+
+/* Where a dragged column would land. */
+.th[data-drop='before'] {
+  box-shadow: inset 3px 0 0 var(--mantine-primary-color-filled);
+}
+
+.th[data-drop='after'] {
+  box-shadow: inset -3px 0 0 var(--mantine-primary-color-filled);
+}
+
 /* The row the cursor is on: a light tint, stronger while the grid has the focus. */
 .grid tr[data-active] td {
   background-color: var(--mantine-primary-color-light);
