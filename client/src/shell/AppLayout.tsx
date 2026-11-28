@@ -11,6 +11,7 @@ import { isBoolean, usePreference } from '../platform/preferences'
 import { useSession, useSessionInfo } from '../platform/session'
 import { useText } from '../platform/useText'
 import classes from './AppLayout.module.css'
+import { ChangePasswordDialog } from './ChangePasswordDialog'
 import { CommandBar } from './CommandBar'
 import { CustomizeMenu } from './CustomizeMenu'
 
@@ -66,7 +67,7 @@ function CompanyMenu(): React.JSX.Element | null {
   )
 }
 
-function UserMenu(): React.JSX.Element {
+function UserMenu({ onChangePassword }: { onChangePassword: () => void }): React.JSX.Element {
   const t = useText()
   const info = useSessionInfo()
   const { setLanguage, logout } = useSession()
@@ -94,6 +95,7 @@ function UserMenu(): React.JSX.Element {
           </Menu.Item>
         ))}
         <Menu.Divider />
+        <Menu.Item onClick={onChangePassword}>{t('changePassword')}</Menu.Item>
         <Menu.Item color="red" onClick={() => logout()}>
           {t('signOut')}
         </Menu.Item>
@@ -245,6 +247,7 @@ export function AppLayout(): React.JSX.Element {
   const barVisible = pinned || shown
   const [commands] = useState(() => new CommandStore())
   const [customizing, setCustomizing] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
   const customize = (): void => {
     setShown(false)
     setCustomizing(true)
@@ -261,6 +264,7 @@ export function AppLayout(): React.JSX.Element {
       }
     },
     { id: 'app:customizeMenu', label: t('customizeMenu'), run: customize },
+    { id: 'app:changePassword', label: t('changePassword'), run: () => setChangingPassword(true) },
     { id: 'app:signOut', label: t('signOut'), run: () => void logout() }
   ]
 
@@ -299,7 +303,7 @@ export function AppLayout(): React.JSX.Element {
               <CommandBar appCommands={appCommands} />
               <Group gap={2} wrap="nowrap">
                 <CompanyMenu />
-                <UserMenu />
+                <UserMenu onChangePassword={() => setChangingPassword(true)} />
               </Group>
             </Group>
             {barVisible && (
@@ -321,6 +325,7 @@ export function AppLayout(): React.JSX.Element {
           </AppShell.Main>
         </AppShell>
         <CustomizeMenu opened={customizing} onClose={() => setCustomizing(false)} />
+        {changingPassword && <ChangePasswordDialog onClose={() => setChangingPassword(false)} />}
       </CustomizeMenuContext.Provider>
     </CommandContext.Provider>
   )

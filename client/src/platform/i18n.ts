@@ -43,6 +43,21 @@ const TEXTS = {
   signOut: { fr: 'Se déconnecter', en: 'Sign out' },
   userNo: { fr: "Code d'utilisateur", en: 'User number' },
   password: { fr: 'Mot de passe', en: 'Password' },
+  changePassword: { fr: 'Changer le mot de passe', en: 'Change password' },
+  currentPassword: { fr: 'Mot de passe actuel', en: 'Current password' },
+  newPassword: { fr: 'Nouveau mot de passe', en: 'New password' },
+  confirmNewPassword: {
+    fr: 'Confirmer le nouveau mot de passe',
+    en: 'Confirm the new password'
+  },
+  passwordsDiffer: {
+    fr: 'Les deux mots de passe ne sont pas identiques',
+    en: 'The two passwords are not the same'
+  },
+  passwordChanged: {
+    fr: 'Mot de passe changé. Vos autres sessions ont été fermées.',
+    en: 'Password changed. Your other sessions were signed out.'
+  },
   chooseCompany: { fr: 'Choisissez une entreprise', en: 'Choose a company' },
   company: { fr: 'Entreprise', en: 'Company' },
   language: { fr: 'Langue', en: 'Language' },
@@ -145,6 +160,16 @@ const TEXTS = {
   moreRows: {
     fr: 'Les {n} premières lignes sont affichées.',
     en: 'The first {n} rows are shown.'
+  },
+
+  // Role permissions (override panel; the descriptions are the server's)
+  permissions: { fr: 'Permissions', en: 'Permissions' },
+  permission: { fr: 'Permission', en: 'Permission' },
+  description: { fr: 'Description', en: 'Description' },
+  permissionsCount: { fr: '{n} sur {total}', en: '{n} of {total}' },
+  permissionNotDeclared: {
+    fr: "N'existe plus : décochez-la pour enregistrer",
+    en: 'No longer exists: untick it to save'
   },
 
   // History

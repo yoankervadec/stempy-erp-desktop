@@ -138,6 +138,36 @@ export interface MePatch {
   language: Language | null
 }
 
+/** POST /auth/me/password: 204. This session stays open, the user's others end. */
+export interface ChangePasswordRequest {
+  currentPassword: string
+  /** 8 to 256 characters. */
+  newPassword: string
+}
+
+// ---------------------------------------------------------------------------
+// Access administration (API_GUIDE section 12)
+// ---------------------------------------------------------------------------
+
+/** GET /access/permissions: { data: PermissionView[] }. */
+export interface PermissionView {
+  name: string
+  /** As the code declares it (not translated). Null when not declared. */
+  description: string | null
+  /** False: still stored on a role, but the code no longer declares it (sending it back is UNKNOWN_PERMISSION). */
+  declared: boolean
+}
+
+/** GET /access/roles/{id}/permissions. */
+export interface RolePermissions {
+  roleId: Id
+  code: string
+  /** The role's version: send it with PATCH /access/roles/{id}. */
+  version: number
+  allPermissions: boolean
+  permissions: PermissionView[]
+}
+
 // ---------------------------------------------------------------------------
 // GET /meta (API_GUIDE section 10, ARCHITECTURE 23.6)
 // ---------------------------------------------------------------------------
