@@ -1,4 +1,11 @@
-import { Checkbox, Select, Textarea, TextInput, type MantineSize } from '@mantine/core'
+import {
+  Checkbox,
+  PasswordInput,
+  Select,
+  Textarea,
+  TextInput,
+  type MantineSize
+} from '@mantine/core'
 import type { MetaField, MetaParam, Row } from '../api/types'
 import { formatValue } from '../platform/format'
 import { useLanguage } from '../platform/meta'
@@ -20,6 +27,8 @@ export interface FieldInputProps {
   /** In a grid cell: no label, smaller. */
   compact?: boolean
   size?: MantineSize
+  /** A string typed masked, never kept by the browser (a password). */
+  secret?: boolean
 }
 
 /**
@@ -36,7 +45,8 @@ export function FieldInput({
   error,
   row,
   compact,
-  size
+  size,
+  secret
 }: FieldInputProps): React.JSX.Element {
   const t = useText()
   const language = useLanguage()
@@ -109,6 +119,17 @@ export function FieldInput({
         />
       )
     case 'string':
+      if (secret) {
+        return (
+          <PasswordInput
+            {...common}
+            value={(value as string) ?? ''}
+            onChange={(e) => onChange(e.currentTarget.value)}
+            maxLength={field.maxLength}
+            autoComplete="new-password"
+          />
+        )
+      }
       if (format === 'multiline' && !compact) {
         return (
           <Textarea

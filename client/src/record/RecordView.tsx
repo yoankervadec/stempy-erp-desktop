@@ -33,6 +33,7 @@ import { isNewRecordMeta } from '../api/types'
 import { FieldInput } from '../fields/FieldInput'
 import { formatValue } from '../platform/format'
 import { DELETE_HOTKEY } from '../platform/hotkeys'
+import { overrides } from '../overrides/registry'
 import { useLanguage } from '../platform/meta'
 import { useText } from '../platform/useText'
 import { ConfirmDialog } from '../shell/ConfirmDialog'
@@ -474,19 +475,38 @@ function RecordEditor({
 
   const historyTab =
     !creating && resource.can.history && resource.layout.tabs.find((x) => x.name === 'history')
+  // A tab of the override registry: what this resource's layout cannot express.
+  const extraTab = creating ? undefined : overrides[resource.key]?.recordTab
+  const ExtraPanel = extraTab?.panel
 
   const body = (
     <>
-      {historyTab ? (
+      {historyTab || extraTab ? (
         <Tabs value={tab} onChange={setTab} keepMounted={false}>
           <Tabs.List mb="md">
             <Tabs.Tab value="details">{t('details')}</Tabs.Tab>
-            <Tabs.Tab value="history">{historyTab.label}</Tabs.Tab>
+            {extraTab && <Tabs.Tab value={extraTab.name}>{t(extraTab.label)}</Tabs.Tab>}
+            {historyTab && <Tabs.Tab value="history">{historyTab.label}</Tabs.Tab>}
           </Tabs.List>
           <Tabs.Panel value="details">{details}</Tabs.Panel>
-          <Tabs.Panel value="history">
-            <HistoryTab resource={resource} id={id!} />
-          </Tabs.Panel>
+          {extraTab && ExtraPanel && (
+            <Tabs.Panel value={extraTab.name}>
+              <ExtraPanel
+                resource={resource}
+                record={base}
+                dirty={dirty}
+                onChanged={() => {
+                  changed()
+                  if (id != null) void getRecord(resource, id).then(rebase, failed)
+                }}
+              />
+            </Tabs.Panel>
+          )}
+          {historyTab && (
+            <Tabs.Panel value="history">
+              <HistoryTab resource={resource} id={id!} />
+            </Tabs.Panel>
+          )}
         </Tabs>
       ) : (
         details
@@ -504,6 +524,7 @@ function RecordEditor({
       </ConfirmDialog>
       {action && (
         <ActionDialog
+          resourceKey={resource.key}
           action={action.action}
           recordId={id}
           confirmText={action.confirm}
