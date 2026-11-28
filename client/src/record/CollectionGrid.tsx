@@ -17,7 +17,8 @@ import {
 
 type LinesForm = Record<string, FormLine[]>
 
-function RemoveIcon(): React.JSX.Element {
+/** A small cross: remove a line. */
+export function RemoveIcon(): React.JSX.Element {
   return (
     <svg width="12" height="12" viewBox="0 0 12 12" aria-hidden>
       <path d="M2 2 L10 10 M10 2 L2 10" stroke="currentColor" strokeWidth="1.6" />

@@ -22,6 +22,7 @@ import { listMembers, listPermissions, putMember } from '../api/access'
 import { queryList } from '../api/query'
 import type { Member, MemberPut, MetaScreen, OverrideEffect, RefTitle } from '../api/types'
 import { ReferencePicker } from '../fields/ReferencePicker'
+import { RemoveIcon } from '../record/CollectionGrid'
 import { screenPageId } from '../platform/menu'
 import { useResource } from '../platform/meta'
 import { useText } from '../platform/useText'
@@ -234,7 +235,8 @@ function MemberDialog({
   const [isEnabled, setIsEnabled] = useState(initial.isEnabled)
   const [roles, setRoles] = useState(() => initial.roles.map((r) => r.code))
   const [overrides, setOverrides] = useState<Record<string, OverrideEffect>>(initial.overrides)
-  const [adding, setAdding] = useState<string | null>(null)
+  /** The text typed in the add-a-permission box. */
+  const [addSearch, setAddSearch] = useState('')
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<unknown>(null)
   const [saved, setSaved] = useState(false)
@@ -328,7 +330,8 @@ function MemberDialog({
         <SimpleGrid cols={2} spacing="sm" verticalSpacing="xs">
           <TextInput label={tx.userNo} value={member.userNo} readOnly variant="filled" />
           <TextInput label={tx.name} value={member.name} readOnly variant="filled" />
-          <Checkbox label={tx.userEnabled} checked={member.userEnabled} readOnly size="xs" />
+          {/* The account's own flag: changed on the user's record, not here. */}
+          <Checkbox label={tx.userEnabled} checked={member.userEnabled} disabled size="xs" />
           <Checkbox
             label={tx.isEnabled}
             checked={isEnabled}
@@ -395,7 +398,7 @@ function MemberDialog({
                           })
                         }
                       >
-                        x
+                        <RemoveIcon />
                       </ActionIcon>
                     </Table.Td>
                   )}
@@ -408,12 +411,15 @@ function MemberDialog({
                       aria-label={t('addLine')}
                       placeholder={t('addLine')}
                       data={addable}
-                      value={adding}
+                      value={null}
                       searchable
+                      searchValue={addSearch}
+                      onSearchChange={setAddSearch}
                       onChange={(v) => {
                         if (!v || effects.length === 0) return
                         setOverrides((o) => ({ ...o, [v]: effects[0].value as OverrideEffect }))
-                        setAdding(null)
+                        // Empty again, ready for the next one.
+                        setAddSearch('')
                       }}
                     />
                   </Table.Td>
