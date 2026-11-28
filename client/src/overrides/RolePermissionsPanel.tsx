@@ -177,7 +177,11 @@ export function RolePermissionsPanel({
         />
         <Group gap="xs" wrap="nowrap">
           <Text size="xs" c="dimmed">
-            {t('permissionsCount', { n: selected.size, total: declared.data.length })}
+            {t('permissionsCount', {
+              // An all-permissions role gives every one, whatever its stored list.
+              n: allPermissions ? declared.data.length : selected.size,
+              total: declared.data.length
+            })}
           </Text>
           {canEdit && changed && (
             <>
