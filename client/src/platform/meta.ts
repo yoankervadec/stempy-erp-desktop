@@ -1,5 +1,5 @@
 import { createContext, useContext } from 'react'
-import type { Language, Meta, MetaReport, MetaResource } from '../api/types'
+import type { Language, Meta, MetaReport, MetaResource, MetaScreen } from '../api/types'
 import { systemLanguage } from './i18n'
 
 /**
@@ -26,4 +26,9 @@ export function useResource(key: string): MetaResource | undefined {
 
 export function useReport(key: string): MetaReport | undefined {
   return useMeta().reports.find((r) => r.key === key)
+}
+
+/** A screen by key, or undefined when the user cannot see it. */
+export function useScreen(key: string): MetaScreen | undefined {
+  return (useMeta().screens ?? []).find((s) => s.key === key)
 }

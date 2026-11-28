@@ -8,6 +8,7 @@ import { HomePage } from './screens/HomePage'
 import { RecordPage } from './screens/RecordPage'
 import { ReportPage } from './screens/ReportPage'
 import { ResourcePage } from './screens/ResourcePage'
+import { ScreenPage } from './screens/ScreenPage'
 import { AppLayout } from './shell/AppLayout'
 
 /**
@@ -37,7 +38,20 @@ const reportRoute = createRoute({
   component: ReportPage
 })
 
-const routeTree = rootRoute.addChildren([homeRoute, resourceRoute, recordRoute, reportRoute])
+/** A screen of /meta.screens, built by the client (overrides/registry.ts). */
+const screenRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/s/$screenKey',
+  component: ScreenPage
+})
+
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  resourceRoute,
+  recordRoute,
+  reportRoute,
+  screenRoute
+])
 
 // Hash history: the renderer is one file (app://stempy/index.html), with no server-side routing.
 export const router = createRouter({ routeTree, history: createHashHistory() })

@@ -162,10 +162,8 @@ const TEXTS = {
     en: 'The first {n} rows are shown.'
   },
 
-  // Role permissions (override panel; the descriptions are the server's)
-  permissions: { fr: 'Permissions', en: 'Permissions' },
-  permission: { fr: 'Permission', en: 'Permission' },
-  description: { fr: 'Description', en: 'Description' },
+  // Custom tabs and screens (their words are the server's; these are the client's chrome)
+  add: { fr: 'Ajouter', en: 'Add' },
   permissionsCount: { fr: '{n} sur {total}', en: '{n} of {total}' },
   permissionNotDeclared: {
     fr: "N'existe plus : décochez-la pour enregistrer",

@@ -142,6 +142,7 @@ function MenuBar({
   const isOpen = (id: string): boolean => {
     const [kind, key] = [id.slice(0, id.indexOf(':')), id.slice(id.indexOf(':') + 1)]
     if (kind === 'r') return pathname === `/r/${key}` || pathname.startsWith(`/r/${key}/`)
+    if (kind === 'screen') return pathname === `/s/${key}`
     return pathname === `/reports/${key}`
   }
   const item = (p: MenuPage): React.JSX.Element => (
@@ -181,8 +182,10 @@ function MenuBar({
           dropdown('favourites', t('favourites'), false, menu.favourites.map(item))}
         {menu.favourites.length > 0 && <span className={classes.menuRule} />}
         {menu.shown.map((m) => {
-          const resources = m.pages.filter((p) => p.id.startsWith('r:'))
-          const reports = m.pages.filter((p) => !p.id.startsWith('r:'))
+          // Screens are pages of records too: with the resources, above the reports.
+          const isReport = (p: MenuPage): boolean => p.id.startsWith('report:')
+          const resources = m.pages.filter((p) => !isReport(p))
+          const reports = m.pages.filter(isReport)
           return dropdown(
             m.id,
             m.label,

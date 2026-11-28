@@ -27,8 +27,6 @@ export interface FieldInputProps {
   /** In a grid cell: no label, smaller. */
   compact?: boolean
   size?: MantineSize
-  /** A string typed masked, never kept by the browser (a password). */
-  secret?: boolean
 }
 
 /**
@@ -45,8 +43,7 @@ export function FieldInput({
   error,
   row,
   compact,
-  size,
-  secret
+  size
 }: FieldInputProps): React.JSX.Element {
   const t = useText()
   const language = useLanguage()
@@ -60,6 +57,8 @@ export function FieldInput({
     onBlur
   }
   const format = 'format' in field ? field.format : undefined
+  // An action param to mask and never keep (a password).
+  const secret = 'secret' in field && field.secret === true
 
   if (readOnly) {
     if (field.type === 'boolean' && compact) {

@@ -30,6 +30,7 @@ import type { RecordPanelProps } from './registry'
  */
 export function RolePermissionsPanel({
   resource,
+  tab,
   record,
   dirty,
   onChanged
@@ -195,8 +196,8 @@ export function RolePermissionsPanel({
         <Table.Thead>
           <Table.Tr>
             <Table.Th w={32} />
-            <Table.Th>{t('permission')}</Table.Th>
-            <Table.Th>{t('description')}</Table.Th>
+            <Table.Th>{tab.texts.permission}</Table.Th>
+            <Table.Th>{tab.texts.description}</Table.Th>
           </Table.Tr>
         </Table.Thead>
         <Table.Tbody>

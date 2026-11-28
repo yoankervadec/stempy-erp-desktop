@@ -473,40 +473,50 @@ function RecordEditor({
     </form>
   )
 
-  const historyTab =
-    !creating && resource.can.history && resource.layout.tabs.find((x) => x.name === 'history')
-  // A tab of the override registry: what this resource's layout cannot express.
-  const extraTab = creating ? undefined : overrides[resource.key]?.recordTab
-  const ExtraPanel = extraTab?.panel
+  // The layout's tabs in its order: history is built in, a custom one needs a
+  // panel in the override registry (what this resource's layout cannot express).
+  const tabs = creating
+    ? []
+    : resource.layout.tabs.filter((x) =>
+        x.custom
+          ? !!overrides[resource.key]?.tabs?.[x.name]
+          : x.name === 'history' && resource.can.history
+      )
 
   const body = (
     <>
-      {historyTab || extraTab ? (
+      {tabs.length > 0 ? (
         <Tabs value={tab} onChange={setTab} keepMounted={false}>
           <Tabs.List mb="md">
             <Tabs.Tab value="details">{t('details')}</Tabs.Tab>
-            {extraTab && <Tabs.Tab value={extraTab.name}>{t(extraTab.label)}</Tabs.Tab>}
-            {historyTab && <Tabs.Tab value="history">{historyTab.label}</Tabs.Tab>}
+            {tabs.map((x) => (
+              <Tabs.Tab key={x.name} value={x.name}>
+                {x.label}
+              </Tabs.Tab>
+            ))}
           </Tabs.List>
           <Tabs.Panel value="details">{details}</Tabs.Panel>
-          {extraTab && ExtraPanel && (
-            <Tabs.Panel value={extraTab.name}>
-              <ExtraPanel
-                resource={resource}
-                record={base}
-                dirty={dirty}
-                onChanged={() => {
-                  changed()
-                  if (id != null) void getRecord(resource, id).then(rebase, failed)
-                }}
-              />
-            </Tabs.Panel>
-          )}
-          {historyTab && (
-            <Tabs.Panel value="history">
-              <HistoryTab resource={resource} id={id!} />
-            </Tabs.Panel>
-          )}
+          {tabs.map((x) => {
+            const Panel = x.custom ? overrides[resource.key]?.tabs?.[x.name] : undefined
+            return (
+              <Tabs.Panel key={x.name} value={x.name}>
+                {Panel ? (
+                  <Panel
+                    resource={resource}
+                    tab={x}
+                    record={base}
+                    dirty={dirty}
+                    onChanged={() => {
+                      changed()
+                      if (id != null) void getRecord(resource, id).then(rebase, failed)
+                    }}
+                  />
+                ) : (
+                  <HistoryTab resource={resource} id={id!} />
+                )}
+              </Tabs.Panel>
+            )
+          })}
         </Tabs>
       ) : (
         details
@@ -524,7 +534,6 @@ function RecordEditor({
       </ConfirmDialog>
       {action && (
         <ActionDialog
-          resourceKey={resource.key}
           action={action.action}
           recordId={id}
           confirmText={action.confirm}

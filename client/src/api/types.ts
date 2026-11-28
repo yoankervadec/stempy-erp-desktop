@@ -158,6 +158,41 @@ export interface PermissionView {
   declared: boolean
 }
 
+/** A role as a member lists it. */
+export interface MemberRole {
+  id: Id
+  code: string
+  name: string
+  isEnabled: boolean
+}
+
+export type OverrideEffect = 'GRANT' | 'DENY'
+
+/** GET /access/members ({ data: Member[] }) and /access/members/{userId}: access to the request's company. */
+export interface Member {
+  userId: Id
+  userNo: string
+  name: string
+  /** The account's own flag: a disabled user can't log in anywhere. */
+  userEnabled: boolean
+  /** The membership's: whether they may work in this company. */
+  isEnabled: boolean
+  /** Disabled roles included. */
+  roles: MemberRole[]
+  /** Permission name -> effect. */
+  overrides: Record<string, OverrideEffect>
+  /** What that gives them here now, sorted; empty while either flag is off. */
+  permissions: string[]
+}
+
+/** PUT /access/members/{userId}: each part sent replaces what is stored, parts left out stay. */
+export interface MemberPut {
+  isEnabled?: boolean
+  /** Role codes. */
+  roles?: string[]
+  overrides?: Record<string, OverrideEffect>
+}
+
 /** GET /access/roles/{id}/permissions. */
 export interface RolePermissions {
   roleId: Id
@@ -178,6 +213,8 @@ export interface Meta {
   menu: MenuGroup[]
   resources: MetaResource[]
   reports: MetaReport[]
+  /** Screens the client builds itself (neither a resource nor a report), among those the user may see. */
+  screens: MetaScreen[]
 }
 
 export interface MenuGroup {
@@ -187,6 +224,26 @@ export interface MenuGroup {
   resources: ResourceKey[]
   /** Report keys. */
   reports: string[]
+  /** Screen keys. */
+  screens: string[]
+}
+
+/**
+ * A screen the client builds itself (ARCHITECTURE 23.12), such as "member"
+ * (the company's members). Every word it shows comes in `texts`.
+ */
+export interface MetaScreen {
+  key: string
+  label: string
+  module: ModuleName
+  /** Where its routes start: "/access/members". */
+  path: string
+  /** What the user may do there, by capability name ({ manage: true }). */
+  can: Record<string, boolean>
+  /** Its words, by name, in the user's language. */
+  texts: Record<string, string>
+  /** Labelled value lists, by name ("effect": GRANT, DENY). */
+  values: Record<string, EnumValue[]>
 }
 
 export type FieldTypeName =
@@ -251,7 +308,10 @@ export interface MetaField extends TypedInput {
 }
 
 /** An action's or a report's parameter: the dialog's or the report form's input. */
-export type MetaParam = TypedInput
+export interface MetaParam extends TypedInput {
+  /** Action params: a value to mask and never keep (a password). */
+  secret?: boolean
+}
 
 export interface SortKey {
   field: string
@@ -325,9 +385,13 @@ export interface LayoutCollection {
 }
 
 export interface LayoutTab {
-  /** "history" today; later attachments, notes. */
+  /** "history" (built in), or a custom tab's name ("permissions" on roles). */
   name: 'history' | (string & {})
   label: string
+  /** A tab the client builds itself (see the override registry); history is built in. */
+  custom: boolean
+  /** A custom tab's words, by name; empty for built-in tabs. */
+  texts: Record<string, string>
 }
 
 export interface MetaAction {
