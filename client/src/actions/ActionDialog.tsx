@@ -3,9 +3,8 @@ import { Alert, Button, Group, Modal, Stack, Text } from '@mantine/core'
 import { useState } from 'react'
 import { ApiError } from '../api/client'
 import { runAction } from '../api/records'
-import type { Id, MetaAction, ResourceKey } from '../api/types'
+import type { Id, MetaAction } from '../api/types'
 import { FieldInput } from '../fields/FieldInput'
-import { isSecretParam } from '../overrides/registry'
 import { useText } from '../platform/useText'
 import { toInput, toWire } from '../record/values'
 import { ErrorAlert } from '../shell/ErrorAlert'
@@ -20,14 +19,12 @@ export interface ActionResult {
  * as the server worded it for this record. Field errors land on the inputs.
  */
 export function ActionDialog({
-  resourceKey,
   action,
   recordId,
   confirmText,
   onClose,
   onDone
 }: {
-  resourceKey: ResourceKey
   action: MetaAction
   recordId: Id | null
   /** From the record's _meta.actions: already in the user's language, with its values. */
@@ -85,7 +82,6 @@ export function ActionDialog({
             <FieldInput
               key={p.name}
               field={p}
-              secret={isSecretParam(resourceKey, action.name, p.name)}
               value={values[p.name]}
               error={fieldErrors[p.name]}
               onChange={(v) => setValues((old) => ({ ...old, [p.name]: v }))}

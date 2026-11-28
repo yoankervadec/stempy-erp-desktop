@@ -11,7 +11,7 @@ import { usePreference } from './preferences'
  * was saved, and a new one shows.
  */
 export interface MenuChoices {
-  /** Page ids ("r:<resourceKey>", "report:<reportKey>") and module ids ("m:<module>"). */
+  /** Page ids ("r:<resourceKey>", "report:<reportKey>", "screen:<screenKey>") and module ids ("m:<module>"). */
   hidden?: string[]
   /** Module names, in the user's order; the others follow in the server's. */
   order?: string[]
@@ -49,6 +49,7 @@ function strings(value: unknown): string[] {
 
 export const resourcePageId = (key: string): string => `r:${key}`
 export const reportPageId = (key: string): string => `report:${key}`
+export const screenPageId = (key: string): string => `screen:${key}`
 
 export interface PersonalMenu {
   /** Every module and page, in the user's order, hidden ones included (to arrange them). */
@@ -124,6 +125,13 @@ export function usePersonalMenu(): PersonalMenu {
             reportPageId(key),
             label(key, meta.reports),
             () => void navigate({ to: '/reports/$reportKey', params: { reportKey: key } })
+          )
+        ),
+        ...(g.screens ?? []).map((key) =>
+          page(
+            screenPageId(key),
+            label(key, meta.screens ?? []),
+            () => void navigate({ to: '/s/$screenKey', params: { screenKey: key } })
           )
         )
       ]

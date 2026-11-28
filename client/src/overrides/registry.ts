@@ -1,10 +1,10 @@
 import type { ComponentType } from 'react'
-import type { MetaResource, ResourceKey, Row } from '../api/types'
-import type { TextKey } from '../platform/i18n'
+import type { LayoutTab, MetaResource, MetaScreen, ResourceKey, Row } from '../api/types'
+import { MembersScreen } from './MembersScreen'
 import { RolePermissionsPanel } from './RolePermissionsPanel'
 
 /**
- * Screens the generic ones cannot express, keyed by resource key. Keep this
+ * What the client builds itself, keyed by the server's names. Keep this
  * nearly empty: every entry needs a comment saying why the generic screen
  * does not do.
  *
@@ -14,14 +14,17 @@ import { RolePermissionsPanel } from './RolePermissionsPanel'
  */
 export interface ResourceOverride {
   list?: ComponentType<{ resource: MetaResource }>
-  /** One more tab on a stored record, after Details. */
-  recordTab?: { name: string; label: TextKey; panel: ComponentType<RecordPanelProps> }
-  /** Action params to type in a masked input, by action name. */
-  secretParams?: Record<string, string[]>
+  /**
+   * The panels of the custom tabs the layout names (layout.tabs with custom
+   * true), by tab name. A custom tab with no panel here is not shown.
+   */
+  tabs?: Record<string, ComponentType<RecordPanelProps>>
 }
 
 export interface RecordPanelProps {
   resource: MetaResource
+  /** The tab as /meta describes it: its label and its words (texts). */
+  tab: LayoutTab
   /** The record as last read or saved. */
   record: Row
   /** The record's form has unsaved changes: a write of the panel's own would clash. */
@@ -31,20 +34,20 @@ export interface RecordPanelProps {
 }
 
 export const overrides: Partial<Record<ResourceKey, ResourceOverride>> = {
-  user: {
-    // /meta has no "secret" marker on action params yet, so the generic dialog
-    // would show the new password in clear. Drop this once the server marks it.
-    secretParams: { setPassword: ['password'] }
-  },
   role: {
-    // A role's permissions are rows, not a field, so no layout can show them.
+    // A role's permissions are rows, not a field, so no section can show them.
     // They have their own read (GET /access/roles/{id}/permissions, with the
     // role's version) and are written with PATCH { version, permissions }.
     // API_GUIDE section 12.
-    recordTab: { name: 'permissions', label: 'permissions', panel: RolePermissionsPanel }
+    tabs: { permissions: RolePermissionsPanel }
   }
 }
 
-export function isSecretParam(resource: ResourceKey, action: string, param: string): boolean {
-  return overrides[resource]?.secretParams?.[action]?.includes(param) ?? false
+/**
+ * The screens of /meta.screens, by key (ARCHITECTURE 23.12). The server names
+ * them, gives their words and what the user may do; their routes are their own.
+ */
+export const screens: Record<string, ComponentType<{ screen: MetaScreen }>> = {
+  // The company's members: GET /access/members, PUT /access/members/{userId}.
+  member: MembersScreen
 }

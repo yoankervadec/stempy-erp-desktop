@@ -566,7 +566,6 @@ export function ListScreen({ resource }: { resource: MetaResource }): React.JSX.
         )}
         {action && (
           <ActionDialog
-            resourceKey={resource.key}
             action={action}
             recordId={null}
             confirmText={null}
